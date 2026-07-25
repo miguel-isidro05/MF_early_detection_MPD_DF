@@ -34,9 +34,10 @@
   "artifact_provenance": {
     "dataset": "data/raw/mpd_df_raw_full/Raw Dataset",
     "paper": "references/main_paper/Dataset.pdf",
-    "official_code": "official_code/MPD-DF-main"
+    "official_code": "official_code/MPD-DF-main",
+    "code_commit": "ec7c003"
   },
-  "verified_commit_count": 0,
+  "verified_commit_count": 1,
   "outputs": [
     "data/metadata/dataset_audit.md",
     "reproduction/reports/r0_alignment_verification.json",

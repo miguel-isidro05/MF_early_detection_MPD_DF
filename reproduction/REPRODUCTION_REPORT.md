@@ -60,3 +60,5 @@ Every figure has machine-readable source data under `reproduction/tables/`.
 ## Software And Hardware
 
 Environment capture is generated per experiment. The current validated development environment is Python 3.11 with MNE 1.12.1, NumPy 2.4.6, SciPy 1.17.1, pandas 3.0.3, scikit-learn 1.9.0, and PyTorch 2.12.1.
+
+Verified local code commit: `ec7c003`.
