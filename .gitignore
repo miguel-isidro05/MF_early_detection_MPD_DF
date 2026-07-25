@@ -12,7 +12,9 @@ data/derived/
 **/checkpoints/
 *.pt
 *.pth
+*.zip
+*.partial
+packages/*.zip
 
 paper/ieee_template/*
 !paper/ieee_template/.gitkeep
-

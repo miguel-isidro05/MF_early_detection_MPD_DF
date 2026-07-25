@@ -87,7 +87,7 @@ def main() -> None:
     for label, values in powers.items():
         if not values:
             raise ValueError(f"No PSD segments for label {label}")
-        average = np.mean(np.stack(values), axis=0)
+        average = np.mean(np.stack(values), axis=0) * 1e12
         averages[label] = average
         for channel, power in zip(EDF_CHANNELS, average):
             rows.append(
@@ -96,7 +96,7 @@ def main() -> None:
                     "label": label,
                     "label_name": LABEL_NAMES[label],
                     "channel": channel,
-                    "power_v2": float(power),
+                    "power_uv2": float(power),
                     "n_30s_segments": len(values),
                 }
             )
@@ -117,7 +117,7 @@ def main() -> None:
                     "ocular/muscular rejection criteria."
                 ),
                 "preprocessing": config.to_dict(),
-                "psd": "Welch, 2-second subwindows, integrated 1-30 Hz",
+                "psd": "Welch, 2-second subwindows, integrated 1-30 Hz, converted to uV^2",
                 "psd_status": "INFERRED",
                 "segment_policy": "non-overlapping aligned 30-second clean single-label segments",
             },
@@ -130,23 +130,24 @@ def main() -> None:
     info.set_montage(mne.channels.make_standard_montage("standard_1020"), on_missing="raise")
     positions = np.asarray([channel["loc"][:2] for channel in info["chs"]])
     all_values = np.concatenate(list(averages.values()))
-    vmin, vmax = float(all_values.min()), float(all_values.max())
-    figure, axes = plt.subplots(1, 5, figsize=(15, 3.6), constrained_layout=True)
+    vmin, vmax = 0.0, float(all_values.max())
+    figure, axes = plt.subplots(2, 3, figsize=(12, 8), constrained_layout=True)
     image = None
-    for label, axis in enumerate(axes):
+    for label, axis in enumerate(axes.flat[:5]):
         image, _ = mne.viz.plot_topomap(
             averages[label],
             positions,
             axes=axis,
             show=False,
-            cmap="viridis",
+            cmap="RdBu_r",
             vlim=(vmin, vmax),
-            contours=0,
+            contours=5,
             sensors=True,
         )
-        axis.set_title(LABEL_NAMES[label])
-    figure.colorbar(image, ax=axes, shrink=0.75, label="Integrated PSD (V²)")
-    figure.suptitle("Participant 10 | no-ICA diagnostic | inferred PSD method")
+        axis.set_title(f"{chr(97 + label)}  {LABEL_NAMES[label]}")
+    axes.flat[-1].axis("off")
+    figure.colorbar(image, ax=axes.ravel().tolist(), shrink=0.75, label="Integrated PSD (µV²)")
+    figure.suptitle("Participant 10 | closest no-ICA diagnostic | inferred PSD method")
     figure.savefig(args.output_dir / "figure11_psd_topographies_no_ica.png", dpi=300)
     figure.savefig(args.output_dir / "figure11_psd_topographies_no_ica.pdf")
     plt.close(figure)
@@ -154,4 +155,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

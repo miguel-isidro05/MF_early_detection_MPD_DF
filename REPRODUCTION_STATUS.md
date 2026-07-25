@@ -1,22 +1,20 @@
 # Reproduction Status
 
-Status: `BLOCKED_BY_MISSING_INFORMATION`
+Status: `PARTIAL_BY_EVIDENCE_BOUNDARY`
 
 Completed:
 
-- R0 official repository and path audit.
-- Literal alignment and label-expansion verification with zero count differences.
-- Full 50-subject signal/data audit.
-- Figure 8 functional recreation with source data.
-- Standardized dataset, split, feature, model, metric, and experiment contracts.
+- exact public alignment and label expansion;
+- full 50-subject EEG integrity audit;
+- complete Table 7 recomputation and discrepancy analysis;
+- EEG-only Figures 6, 7, 8, 10, and closest Figure 11 diagnostic;
+- real-data smoke tests for PSD+SVM, EEGNet, and local MSCNN-CAM;
+- portable EEG-only archive contract for RTX execution.
 
-Blocking exact Table 9 reproduction:
+Not completed:
 
-- no public MSCNN-CAM training code;
-- no reported split assignments;
-- no classification preprocessing or normalization scope;
-- no 32-versus-28-channel declaration;
-- no metric averaging or positive-class definition.
+- an exact Table 9 MSCNN-CAM result.
 
-Next safe milestone: obtain the cited 2024 MSCNN-CAM paper/code or explicitly authorize the documented R1 inferred variants.
-
+The remaining blocker is missing public methodology, not missing local compute.
+RTX runs will execute documented inferred R1 variants and the standardized R2
+study. Neither may be renamed as the official Table 9 pipeline.

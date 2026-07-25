@@ -9,4 +9,9 @@
 - Added PSD+SVM, Random Forest, EEGNet, and local MSCNN-CAM contracts.
 - Added cache fingerprints, continuous-context filtering, subject eligibility records, atomic experiment output, and macro-subject metrics.
 - Added Figure 8 recreation and data sources.
-
+- Added PSG-free alignment manifests and a Zip64 EEG-only packaging path.
+- Added group-bounded filtering for strict within-subject evaluation.
+- Added memory-mapped EEG caches and executable EEGNet/MSCNN-CAM training.
+- Regenerated Figures 6, 7, 10, and 11 after direct visual comparison with the paper.
+- Recomputed all Table 7 strategies and documented an internal published-count inconsistency.
+- Completed 23 tests plus classical and deep real-EDF smoke runs.

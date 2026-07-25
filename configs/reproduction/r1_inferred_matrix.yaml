@@ -1,0 +1,23 @@
+name: r1_inferred_matrix
+seed: 42
+task: C
+window_sec: 1
+stride_sec: 1
+claim_boundary: inferred_reimplementations_not_exact_table9
+variants:
+  montages: [paper28, edf32]
+  preprocessing:
+    - reference_unspecified
+    - annotation_visualization
+    - physiological_validation
+  protocols:
+    - within_subject
+    - loso
+models: [mscnn_cam]
+artifact_policy: exclude_8_9
+filter_scope:
+  within_subject: group_bounded
+  loso: subject_continuous
+subject_allowlist:
+  within_subject: data/metadata/eligible_within_task_c.txt
+  loso: null

@@ -1,7 +1,18 @@
 # Reproduction Summary
 
-Target: MPD-DF aggregate EEG classification, Wakefulness versus Fatigue1-4.
+Target: MPD-DF EEG, Wakefulness versus Fatigue1-4.
 
-Status: `blocked`.
+Status: data and figures reproduced; exact Table 9 training remains blocked by
+unpublished protocol details.
 
-R0 alignment is verified exactly against an independent literal audit. The full dataset QC and functional figure recreations are complete. The official repository does not provide MSCNN-CAM training or evaluation code, and the descriptor omits the split and classification preprocessing details. R1 remains methodologically incomplete until these gaps are resolved or explicitly treated as inferred choices.
+Verified evidence:
+
+- 50-subject full EEG scan with no NaN/Inf;
+- exact 372,404-second alignment;
+- portable EEG-only timing equivalence without PSG;
+- 23 passing tests;
+- real EDF smoke runs for classical and deep paths;
+- regenerated EEG figures with machine-readable sources.
+
+The RTX package contains the data and executable paths needed for inferred R1 and
+standardized R2 experiments.

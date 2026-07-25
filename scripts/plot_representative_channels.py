@@ -91,21 +91,23 @@ def main() -> None:
     )
 
     time = np.arange(data.shape[-1]) / output_sfreq
-    figure, axes = plt.subplots(4, 1, figsize=(13, 10), sharex=True, constrained_layout=True)
-    colors = plt.cm.viridis(np.linspace(0.05, 0.95, len(data)))
-    for channel_index, (channel, axis) in enumerate(zip(CHANNELS, axes)):
+    figure, axes = plt.subplots(2, 2, figsize=(13, 10), sharex=True, constrained_layout=True)
+    colors = plt.cm.tab20(np.arange(len(data)) % 20)
+    offsets = np.linspace(-120, 120, len(data))
+    for channel_index, (channel, axis) in enumerate(zip(CHANNELS, axes.flat)):
         for subject_index in range(len(data)):
             axis.plot(
                 time,
-                data[subject_index, channel_index],
+                data[subject_index, channel_index] * 1.8 + offsets[subject_index],
                 color=colors[subject_index],
-                linewidth=0.45,
-                alpha=0.45,
+                linewidth=0.5,
+                alpha=0.9,
             )
-        axis.set_title(channel)
-        axis.set_ylabel("z-score")
+        axis.set_title(f"EEG Signals of Channel {channel}")
+        axis.set_ylabel("Amplitude (stacked z-score)")
         axis.set_xlim(0, 10)
-    axes[-1].set_xlabel("Time (s)")
+        axis.set_ylim(-128, 128)
+        axis.set_xlabel("Time (s)")
     figure.savefig(args.output_dir / "figure10_representative_channels.png", dpi=300)
     figure.savefig(args.output_dir / "figure10_representative_channels.pdf")
     plt.close(figure)
@@ -113,4 +115,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

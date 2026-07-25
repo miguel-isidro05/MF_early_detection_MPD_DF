@@ -3,49 +3,27 @@
   "generated_at": "2026-07-25",
   "user_language": "es",
   "target_repo": "official_code/MPD-DF-main",
-  "readme_first": true,
-  "selected_goal": "Aggregate 1-second EEG MSCNN-CAM reproduction",
-  "goal_priority": "documented_evaluation",
-  "status": "blocked",
-  "documented_command_status": "missing",
-  "documented_command": null,
-  "documented_command_kind": "evaluation",
-  "documented_command_source": "MPD-DF descriptor Table 9",
-  "documented_command_section": "Correlation between physiological data and fatigue levels",
-  "patches_applied": false,
-  "patch_branch": null,
-  "readme_fidelity": "partial",
-  "highest_patch_risk": "none",
-  "evidence_level": "mixed",
-  "assumptions": [
-    "Malformed EDF physical-dimension bytes are interpreted as microvolts."
+  "selected_goal": "MPD-DF EEG data, figure, and Table 9 reproduction",
+  "status": "partial_by_evidence_boundary",
+  "r0_alignment": "match",
+  "dataset_full_qc": "passed",
+  "tests_passed": 23,
+  "real_data_smokes": [
+    "psd_svm",
+    "eegnet",
+    "local_mscnn_cam"
   ],
+  "table9_exact_status": "blocked_by_unpublished_protocol",
+  "r1_status": "executable_inferred_variants",
+  "r2_status": "ready_for_rtx_execution",
+  "portable_eeg_archive": "packages/mpd_df_eeg_only_rtx.zip",
   "unverified_inferences": [
-    "MSCNN-CAM local architecture",
+    "Table 9 split",
     "classification preprocessing",
-    "reference split",
-    "metric averaging"
+    "32 versus 28 channels",
+    "metric averaging",
+    "MSCNN-CAM exact architecture",
+    "Figure 11 ICA component rejection"
   ],
-  "protocol_deviations": [],
-  "human_decisions_required": [
-    "Provide the cited MSCNN-CAM paper/code or authorize the documented inferred R1 variants."
-  ],
-  "next_safe_action": "Resolve the exact MSCNN-CAM architecture and Table 9 protocol before claiming reproduction.",
-  "artifact_provenance": {
-    "dataset": "data/raw/mpd_df_raw_full/Raw Dataset",
-    "paper": "references/main_paper/Dataset.pdf",
-    "official_code": "official_code/MPD-DF-main",
-    "code_commit": "ec7c003"
-  },
-  "verified_commit_count": 1,
-  "outputs": [
-    "data/metadata/dataset_audit.md",
-    "reproduction/reports/r0_alignment_verification.json",
-    "reproduction/figures/label_distribution.png",
-    "reproduction/figures/figure06_representative_eeg.png",
-    "reproduction/figures/figure07_band_waveforms.png",
-    "reproduction/figures/figure10_representative_channels.png",
-    "reproduction/figures/figure11_psd_topographies_no_ica.png"
-  ],
-  "notes": "R0 alignment is verified. No Table 9 model-result claim has been made."
+  "claim_boundary": "No inferred R1 or standardized R2 metric is an exact official Table 9 reproduction."
 }

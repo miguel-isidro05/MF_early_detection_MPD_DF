@@ -1,0 +1,35 @@
+{
+  "date": "2026-07-25",
+  "seed": 42,
+  "scientific_result": false,
+  "purpose": "End-to-end execution validation only",
+  "unit_tests": {
+    "passed": 23,
+    "failed": 0
+  },
+  "portable_group_bounded_psd_svm": {
+    "subject": "01",
+    "protocol": "within_subject_grouped",
+    "n_windows": 7202,
+    "accuracy": 0.7234101638433769,
+    "balanced_accuracy": 0.6506211312115482,
+    "f1": 0.2671081677704194
+  },
+  "eegnet": {
+    "subject": "01",
+    "windows": 128,
+    "epochs": 1,
+    "folds": 1,
+    "device": "cpu",
+    "status": "passed"
+  },
+  "local_mscnn_cam": {
+    "subject": "01",
+    "windows": 128,
+    "epochs": 1,
+    "folds": 1,
+    "device": "cpu",
+    "status": "passed",
+    "claim_boundary": "inferred local implementation, not official Table 9"
+  }
+}

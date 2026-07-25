@@ -1,13 +1,20 @@
-# Data Layout
+# Data layout
 
-The full MPD-DF raw dataset is not duplicated here.
+`raw/mpd_df_raw_full` and `eeg_only/` are local symlinks. Git does not track them.
 
-`raw/mpd_df_raw_full` is a symlink to the downloaded full dataset.
+The portable RTX archive contains:
 
-`eeg_only/` contains symlinks to only the inputs needed for EEG modeling and audit:
+```text
+MPD_DF_EEG_ONLY/
+├── EEG/                     # 50 EDF files
+├── Annotation/              # 50 physician annotation files
+├── alignment_manifest.csv   # PSG-derived overlap timing
+├── bundle_manifest.json
+└── README.md
+```
 
-- `EEG/`: 50 raw EEG EDF files.
-- `Annotation/`: 50 physician annotation files.
-- `Questionnaire information.xlsx`: questionnaire metadata.
+The archive excludes PSG, ECG, EOG, respiratory signals, questionnaire data, and
+derived caches. After extraction, pass `MPD_DF_EEG_ONLY` as `--raw-root`.
 
-Derived arrays, inventories, caches, and experiment-ready epochs should be written under `metadata/`, `derived/`, or experiment folders, never into the source dataset.
+`metadata/` stores audit outputs. `derived/` is reserved for feature and memmap
+caches and is ignored by Git.

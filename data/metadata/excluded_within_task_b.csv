@@ -1,0 +1,6 @@
+scope,subject,fold,reason
+subject,08,,At least two independent groups per class are required
+subject,20,,Training fold lacks two independent groups per class
+subject,22,,Both binary classes are required; missing classes: [0]
+subject,42,,Both binary classes are required; missing classes: [1]
+subject,49,,Both binary classes are required; missing classes: [1]

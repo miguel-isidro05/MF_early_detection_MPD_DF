@@ -3,8 +3,10 @@ seed: 42
 task: A
 window_sec: 1
 stride_sec: 1
-group: physician_30_second_block
+group: fixed_30_second_temporal_bin
+filter_scope: group_bounded
+subject_allowlist: data/metadata/eligible_within_task_a.txt
+eligibility_policy: shared_nested_validation_cohort
 requested_folds: 5
 artifact_policy: exclude_8_9
 models: [psd_svm, random_forest, eegnet, mscnn_cam]
-

@@ -33,6 +33,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--task", choices=("A", "B", "C"), required=True)
     parser.add_argument("--model", choices=("psd_svm", "random_forest"), required=True)
     parser.add_argument("--protocol", choices=("within_subject", "loso"), required=True)
+    parser.add_argument("--subject-allowlist", type=Path)
     parser.add_argument("--seed", type=int, default=GLOBAL_SEED)
     return parser.parse_args()
 
@@ -142,6 +143,21 @@ def build_split_plan(
 def main() -> None:
     args = parse_args()
     X, y, metadata, manifest = load_features(args.feature_dir, args.task)
+    input_subjects = sorted(metadata["subject"].astype(str).str.zfill(2).unique())
+    allowlist_excluded: list[str] = []
+    if args.subject_allowlist is not None:
+        allowed = {
+            value.strip().zfill(2)
+            for value in args.subject_allowlist.read_text().splitlines()
+            if value.strip()
+        }
+        selected = metadata["subject"].astype(str).str.zfill(2).isin(allowed).to_numpy()
+        X = X[selected]
+        y = y[selected]
+        metadata = metadata.loc[selected].reset_index(drop=True)
+        allowlist_excluded = sorted(set(input_subjects) - allowed)
+        if metadata.empty:
+            raise ValueError("Subject allowlist removed every cached window")
     factory = (
         (lambda: make_psd_svm(seed=args.seed))
         if args.model == "psd_svm"
@@ -197,6 +213,19 @@ def main() -> None:
     )
     metrics = binary_metrics(y, pooled)
     save_experiment_results(output, folds, predictions, metrics)
+    metrics_path = output / "metrics.json"
+    metrics_payload = json.loads(metrics_path.read_text())
+    metrics_payload["eligibility"] = {
+        "n_subjects_input": len(input_subjects),
+        "n_subjects_considered": metadata["subject"].nunique(),
+        "n_subjects_evaluated": predictions["subject"].nunique(),
+        "n_subjects_allowlist_excluded": len(allowlist_excluded),
+        "subjects_allowlist_excluded": allowlist_excluded,
+        "subjects_protocol_excluded": sorted(
+            {str(row["subject"]) for row in exclusions}
+        ),
+    }
+    metrics_path.write_text(json.dumps(metrics_payload, indent=2, allow_nan=False) + "\n")
     (output / "subjects_train.txt").write_text(
         "\n".join(
             f"fold={row.fold}: {row.train_subjects}"

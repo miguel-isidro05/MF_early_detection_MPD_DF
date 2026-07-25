@@ -1,0 +1,24 @@
+name: rtx4060_eeg_experiment_matrix
+seed: 42
+hardware: NVIDIA_RTX_4060
+main_tasks: [A, B]
+models: [psd_svm, random_forest, eegnet, mscnn_cam]
+window_seconds: [1]
+protocol_order:
+  - within_subject_grouped
+  - leave_one_subject_out
+primary_task: A
+reference_task: B
+primary_metric: subject_macro_f1
+secondary_metrics:
+  - subject_macro_balanced_accuracy
+  - subject_macro_recall
+  - subject_macro_specificity
+artifact_policy: exclude_8_9
+seed_policy: single_global_seed_42
+deep_defaults:
+  epochs: 50
+  patience: 8
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.0001

@@ -1,0 +1,4 @@
+task,total_subjects,eligible_subjects,excluded_subjects,valid_outer_folds
+A,50,42,8,205
+B,50,45,5,225
+C,50,45,5,225

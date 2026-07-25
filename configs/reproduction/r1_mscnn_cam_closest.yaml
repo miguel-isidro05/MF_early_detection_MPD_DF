@@ -3,10 +3,16 @@ seed: 42
 task: C
 window_sec: 1
 stride_sec: 1
-montage: unresolved_32_vs_28
-preprocessing: unresolved_reference_classification
+montage: paper28
+montage_status: inferred_variant
+preprocessing: physiological_validation
+preprocessing_status: inferred_variant_not_reported_for_classification
 model: mscnn_cam
-implementation: local_reimplementation_pending_cited_code
-split: unresolved_reference_protocol
-status: blocked_by_missing_method_details
-
+implementation: local_reimplementation_not_official_code
+split: within_subject_grouped_5fold
+split_status: inferred_variant
+subject_allowlist: data/metadata/eligible_within_task_c.txt
+artifact_policy: exclude_8_9
+filter_scope: group_bounded
+status: executable_inferred_reimplementation
+claim_boundary: never_report_as_exact_table9_reproduction

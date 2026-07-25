@@ -15,7 +15,7 @@
     "cuda_available": false,
     "cuda_version": null,
     "cudnn_version": null,
-    "mps_available": true
+    "mps_available": false
   },
   "note": "This captures the local audit/development machine. Final RTX 4060 runs must capture their own NVIDIA driver, CUDA, cuDNN, and GPU details."
 }

@@ -28,7 +28,9 @@ evaluation:
   within_subject:
     splitter: stratified_group_kfold
     requested_folds: 5
-    group: physician_30_second_block
+    group: fixed_30_second_temporal_bin
+    filter_scope: group_bounded
+    eligibility_policy: task_specific_shared_nested_validation_cohort
   cross_subject:
     splitter: leave_one_subject_out
-
+    filter_scope: subject_continuous

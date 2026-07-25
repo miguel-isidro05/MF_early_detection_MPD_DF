@@ -2,63 +2,75 @@
 
 ## Status
 
-`NOT_REPRODUCED`
+`DATA_AND_FIGURE_REPRODUCTION_COMPLETE; TABLE9_EXACT_REPRODUCTION_BLOCKED`
 
-R0 alignment inspection is implemented. R1 MSCNN-CAM training has not yet produced a valid reference-comparable result.
+The public alignment, dataset audit, label analysis, and EEG figure workflows have
+been reproduced. The classification result in Table 9 cannot be reproduced exactly
+from the public material because its executable protocol is not published.
 
-## Reference
+## Table 9 reference
 
 | Input | Accuracy | Precision | Recall | F1 |
 |---|---:|---:|---:|---:|
 | 1-second EEG | 0.876 | 0.760 | 0.699 | 0.705 |
 
-## Verified Task Elements
+No local metric is presented as a reproduced Table 9 value.
 
-- Dataset: local raw MPD-DF, 50 participants.
-- Signal: EEG at 500 Hz.
-- Task C: Wakefulness versus Fatigue1+Fatigue2+Fatigue3+Fatigue4.
-- Segmentation: 1-second windows, initially without overlap.
-- Artifact labels: 8 and 9 remain separate and are excluded from clean-state tasks.
-- Alignment: latest EEG/PSG/annotation start and earliest EEG/PSG end; final one-second trim follows `DataAlign.py`.
+## Verified data path
 
-## Preprocessing Comparison
+- Dataset: 50 raw MPD-DF EEG recordings.
+- Sampling: 500 Hz, 32 EDF channels.
+- Alignment: latest EEG/PSG/annotation start, earliest EEG/PSG end, final one-second
+  trim.
+- Result: 372,404 seconds and zero aggregate label-count differences from an
+  independent literal implementation of `DataAlign.py`.
+- Artifacts: labels 8 and 9 remain explicit and are excluded from clean-state
+  classification tasks.
 
-| Pipeline | Purpose in paper | Bandpass | Notch | Downsample | Normalization | ICA |
-|---|---|---:|---:|---:|---|---|
-| Annotation-oriented visualization | Figures 6-8 | 0.3-35 Hz | 49-51 Hz | Not reported | Not reported | Not necessarily |
-| Physiological validation | Figure 10 | 1-100 Hz | 50 Hz | 200 Hz | z-score, scope unreported | No |
-| Participant 10 topographies | Figure 11 | Based on prior figure pipeline | Verify | Verify | Verify | Yes, EEGLAB |
-| MSCNN-CAM classification | Table 9 | Unreported | Unreported | Unreported | Unreported | Unreported |
+## Table 7
 
-## Critical Comparability Gaps
+The local 118-minute normalization does not equal the published counts.
 
-The descriptor and public repository do not provide:
+| Label | Local 1 s | Paper 1 s | Difference |
+|---|---:|---:|---:|
+| Wakefulness | 268,404 | 266,718 | +1,686 |
+| Fatigue1 | 60,890 | 60,292 | +598 |
+| Fatigue2 | 14,351 | 14,789 | -438 |
+| Fatigue3 | 760 | 760 | 0 |
+| Fatigue4 | 0 | 0 | 0 |
 
-- Table 9 split assignments or fold design;
-- metric averaging and positive-class convention;
-- exact 32-versus-28-channel input;
+The published 10-second Wakefulness row contains 26,716 non-overlapping windows,
+which would require 267,160 one-second samples, but the same table reports only
+266,718. That row is internally inconsistent if all strategies use the same
+normalized pool. Full comparisons are in
+`reproduction/tables/table07_full_comparison.csv`.
+
+## Figures
+
+- Figure 6: all five fatigue states plus Signal Abnormality and Severe Artifacts;
+  30-second EEG screens.
+- Figure 7: beta, alpha, theta, and delta waveforms. Published x-axis starts were
+  recovered from the figure; subject and channel choices remain inferred.
+- Figure 8: label timeline, participant totals, and the 7200-second detail.
+- Figure 10: Fp1, C3, T7, and O1 for all 50 participants using the published
+  visualization preprocessing.
+- Figure 11: Participant 10 topographies with the published layout and a shared
+  PSD scale. This remains a no-ICA diagnostic because the paper does not publish
+  removed components, rejection criteria, or the exact PSD estimator.
+
+Every generated figure has CSV, JSON, or NPZ source data under
+`reproduction/tables/`.
+
+## Classification boundary
+
+The paper and official repository do not provide:
+
+- Table 9 splits or folds;
 - classification preprocessing and normalization scope;
-- artifact policy and class balancing;
-- MSCNN-CAM source code or complete hyperparameters.
+- 32-channel versus 28-channel input;
+- metric averaging and positive-class convention;
+- artifact and balancing policy;
+- MSCNN-CAM training code and complete hyperparameters.
 
-The local MSCNN-CAM module is therefore a documented reimplementation. Any result from it is R1/R2 evidence, not an exact official reproduction.
-
-## Results
-
-No valid metrics are recorded yet.
-
-## Recreated Figures
-
-- Figure 6 functional surrogate: five 30-second Participant 10 EEG states. Subject and segment selection are explicitly inferred.
-- Figure 7 functional surrogate: delta/theta/alpha/beta waveforms from O1. Channel and segment selection are explicitly inferred.
-- Figure 8 functional recreation: complete label timeline, normalized participant distribution, and 7200-second zoom.
-- Figure 10 EEG-only panels: Fp1, C3, T7, and O1 for all participants. The 10-second selection and z-score scope are explicitly inferred.
-- Figure 11 diagnostic only: Participant 10 no-ICA integrated PSD topographies. This is not accepted as the reference reproduction because the paper omits ICA component decisions and exact PSD settings.
-
-Every figure has machine-readable source data under `reproduction/tables/`.
-
-## Software And Hardware
-
-Environment capture is generated per experiment. The current validated development environment is Python 3.11 with MNE 1.12.1, NumPy 2.4.6, SciPy 1.17.1, pandas 3.0.3, scikit-learn 1.9.0, and PyTorch 2.12.1.
-
-Verified local code commit: `ec7c003`.
+`configs/reproduction/r1_inferred_matrix.yaml` defines executable sensitivity
+variants for the RTX 4060. Their results must be labeled inferred reimplementations.

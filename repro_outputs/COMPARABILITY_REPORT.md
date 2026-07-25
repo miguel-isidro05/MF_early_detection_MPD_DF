@@ -1,6 +1,14 @@
 # Comparability Report
 
-The current implementation is not yet directly comparable with Table 9 because the reference split, metric averaging, channel subset, model code, training hyperparameters, and classification preprocessing are not fully reported in the MPD-DF descriptor or public repository.
+R0 alignment and the public data audit are directly comparable with the official
+repository.
 
-R2 will be reported as a standardized benchmark. It must not be labeled an exact official reproduction.
+Figures 6, 7, and 10 use the published preprocessing, but the paper omits exact
+subject/window choices. Figure 11 also omits the ICA rejection record and PSD
+settings. These figures are data-grounded functional reproductions with each
+inference recorded beside its source arrays.
 
+Table 9 is not directly reproducible because the split, classification
+preprocessing, channel subset, metric averaging, artifact policy, and model code
+are unavailable. The local MSCNN-CAM is an inferred R1 implementation. R2 is a
+standardized benchmark. Neither is the exact official pipeline.

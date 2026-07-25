@@ -8,7 +8,8 @@
     "demean": true,
     "normalization": "none"
   },
-  "segment_selection": "inferred; paper does not report subject or exact windows",
+  "figure6": "all seven published labels; subjects/windows remain inferred",
+  "figure7": "published x-axis starts used; subjects remain inferred",
   "figure07_channel": "O1",
-  "figure07_channel_status": "inferred"
+  "figure07_channel_status": "inferred because the paper does not identify it"
 }

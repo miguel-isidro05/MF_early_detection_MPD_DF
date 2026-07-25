@@ -1,6 +1,13 @@
-label,label_name,subject,aligned_start_sec,eeg_start_sec,duration_sec,selection_rule,status
-0,Wakefulness,10,0,11,30,first_continuous_30s_segment,INFERRED_SEGMENT_SELECTION
-1,Fatigue1,10,1135,1146,30,first_continuous_30s_segment,INFERRED_SEGMENT_SELECTION
-2,Fatigue2,10,2450,2461,30,first_continuous_30s_segment,INFERRED_SEGMENT_SELECTION
-3,Fatigue3,10,7351,7362,30,first_continuous_30s_segment,INFERRED_SEGMENT_SELECTION
-4,Fatigue4,10,7791,7802,30,first_continuous_30s_segment,INFERRED_SEGMENT_SELECTION
+figure,label,label_name,subject,aligned_start_sec,eeg_start_sec,duration_sec,selection_rule,status
+6,0,Wakefulness,10,0,11,30,first_continuous_30s_candidate,INFERRED_SUBJECT_AND_WINDOW
+6,1,Fatigue1,10,1135,1146,30,first_continuous_30s_candidate,INFERRED_SUBJECT_AND_WINDOW
+6,2,Fatigue2,10,2450,2461,30,first_continuous_30s_candidate,INFERRED_SUBJECT_AND_WINDOW
+6,3,Fatigue3,10,7351,7362,30,first_continuous_30s_candidate,INFERRED_SUBJECT_AND_WINDOW
+6,4,Fatigue4,10,7791,7802,30,first_continuous_30s_candidate,INFERRED_SUBJECT_AND_WINDOW
+6,8,Signal Abnormality,30,3956,3961,30,first_continuous_30s_candidate,INFERRED_SUBJECT_AND_WINDOW
+6,9,Severe Artifacts,05,1600,1607,30,first_continuous_30s_candidate,INFERRED_SUBJECT_AND_WINDOW
+7,0,Wakefulness,10,1729,1740,30,published_x_axis_time_with_matching_subject_candidate,PAPER_TIME_VERIFIED_SUBJECT_INFERRED
+7,1,Fatigue1,10,7092,7103,30,published_x_axis_time_with_matching_subject_candidate,PAPER_TIME_VERIFIED_SUBJECT_INFERRED
+7,2,Fatigue2,04,3892,3900,30,published_x_axis_time_with_matching_subject_candidate,PAPER_TIME_VERIFIED_SUBJECT_INFERRED
+7,3,Fatigue3,10,7743,7754,30,published_x_axis_time_with_matching_subject_candidate,PAPER_TIME_VERIFIED_SUBJECT_INFERRED
+7,4,Fatigue4,10,8016,8027,30,published_x_axis_time_with_matching_subject_candidate,PAPER_TIME_VERIFIED_SUBJECT_INFERRED

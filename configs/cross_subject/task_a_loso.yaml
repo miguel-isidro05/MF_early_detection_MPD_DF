@@ -7,5 +7,5 @@ inner_folds: 5
 window_sec: 1
 stride_sec: 1
 artifact_policy: exclude_8_9
+filter_scope: subject_continuous
 models: [psd_svm, random_forest, eegnet, mscnn_cam]
-

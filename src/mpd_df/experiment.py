@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from importlib.metadata import PackageNotFoundError, version
 import json
 from pathlib import Path
 import platform
@@ -55,10 +56,30 @@ def initialize_experiment(
     (output / "command.txt").write_text(command.strip() + "\n")
     (output / "seed.txt").write_text(f"{context.seed}\n")
     (output / "git_commit.txt").write_text(git_commit(Path(project_root)) + "\n")
+    packages = {}
+    for package in ("mne", "numpy", "pandas", "scikit-learn", "scipy", "torch"):
+        try:
+            packages[package] = version(package)
+        except PackageNotFoundError:
+            packages[package] = None
+    try:
+        import torch
+
+        accelerator = {
+            "cuda_available": torch.cuda.is_available(),
+            "cuda_runtime": torch.version.cuda,
+            "cudnn": torch.backends.cudnn.version(),
+            "mps_available": torch.backends.mps.is_available(),
+            "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+        }
+    except ImportError:
+        accelerator = None
     environment = {
         "python": sys.version,
         "platform": platform.platform(),
         "context": asdict(context),
+        "packages": packages,
+        "accelerator": accelerator,
     }
     (output / "environment.txt").write_text(json.dumps(environment, indent=2) + "\n")
     (output / "stdout.log").touch()

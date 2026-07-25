@@ -10,7 +10,7 @@
     "demean": true,
     "normalization": "none"
   },
-  "psd": "Welch, 2-second subwindows, integrated 1-30 Hz",
+  "psd": "Welch, 2-second subwindows, integrated 1-30 Hz, converted to uV^2",
   "psd_status": "INFERRED",
   "segment_policy": "non-overlapping aligned 30-second clean single-label segments"
 }
