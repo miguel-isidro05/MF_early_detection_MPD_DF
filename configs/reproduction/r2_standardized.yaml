@@ -1,0 +1,12 @@
+name: r2_standardized
+seed: 42
+task: C
+window_sec: 1
+stride_sec: 1
+montage: edf32
+preprocessing: physiological_validation
+model: mscnn_cam
+split: leave_one_subject_out
+artifact_policy: exclude_8_9
+claim_boundary: standardized_benchmark_not_exact_official_pipeline
+

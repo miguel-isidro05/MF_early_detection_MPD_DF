@@ -1,0 +1,34 @@
+project:
+  title: A Subject-Independent EEG Framework for Early-Stage Driving Fatigue Recognition
+  seed: 42
+  modality: EEG
+
+data:
+  raw_root: data/raw/mpd_df_raw_full/Raw Dataset
+  eeg_only_root: data/eeg_only
+  alignment: official_overlap_headers
+  exclude_labels: [8, 9]
+  verified_sfreq: 500
+  verified_edf_channels: 32
+
+reproduction:
+  task: C
+  window_sec: 1
+  stride_sec: 1
+  reference_metrics:
+    accuracy: 0.876
+    precision: 0.760
+    recall: 0.699
+    f1: 0.705
+  status: NOT_REPRODUCED
+
+evaluation:
+  positive_class: fatigue
+  primary_selection_metric: f1
+  within_subject:
+    splitter: stratified_group_kfold
+    requested_folds: 5
+    group: physician_30_second_block
+  cross_subject:
+    splitter: leave_one_subject_out
+

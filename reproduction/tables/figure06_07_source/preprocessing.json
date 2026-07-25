@@ -1,0 +1,14 @@
+{
+  "confirmed": {
+    "name": "annotation_visualization",
+    "l_freq": 0.3,
+    "h_freq": 35.0,
+    "notch_freq": 50.0,
+    "target_sfreq": null,
+    "demean": true,
+    "normalization": "none"
+  },
+  "segment_selection": "inferred; paper does not report subject or exact windows",
+  "figure07_channel": "O1",
+  "figure07_channel_status": "inferred"
+}

@@ -1,0 +1,12 @@
+name: r1_mscnn_cam_closest
+seed: 42
+task: C
+window_sec: 1
+stride_sec: 1
+montage: unresolved_32_vs_28
+preprocessing: unresolved_reference_classification
+model: mscnn_cam
+implementation: local_reimplementation_pending_cited_code
+split: unresolved_reference_protocol
+status: blocked_by_missing_method_details
+

@@ -1,0 +1,11 @@
+name: cross_subject_task_a_loso
+seed: 42
+task: A
+outer_split: leave_one_subject_out
+inner_split: group_kfold_by_subject
+inner_folds: 5
+window_sec: 1
+stride_sec: 1
+artifact_policy: exclude_8_9
+models: [psd_svm, random_forest, eegnet, mscnn_cam]
+

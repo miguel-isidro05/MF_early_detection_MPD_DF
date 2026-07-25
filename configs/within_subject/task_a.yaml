@@ -1,0 +1,10 @@
+name: within_subject_task_a
+seed: 42
+task: A
+window_sec: 1
+stride_sec: 1
+group: physician_30_second_block
+requested_folds: 5
+artifact_policy: exclude_8_9
+models: [psd_svm, random_forest, eegnet, mscnn_cam]
+

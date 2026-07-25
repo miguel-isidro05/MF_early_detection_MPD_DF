@@ -1,0 +1,14 @@
+name: representation_ablation
+seed: 42
+representations:
+  - name: psd_handcrafted
+    models: [psd_svm, random_forest]
+  - name: minimally_processed_eeg
+    models: [eegnet, mscnn_cam]
+  - name: ica_cleaned_eeg
+    models: [eegnet, mscnn_cam]
+    status: deferred_until_deterministic_component_policy
+comparisons:
+  - psd_handcrafted_vs_minimally_processed_eeg
+  - no_ica_vs_ica_cleaned
+

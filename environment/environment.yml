@@ -1,0 +1,16 @@
+name: mpd-df-eeg
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - matplotlib
+  - mne
+  - numpy
+  - pandas
+  - pip
+  - pyyaml
+  - scikit-learn
+  - scipy
+  - pytorch
+  - pytest
+

@@ -1,0 +1,14 @@
+{
+  "confirmed": {
+    "name": "physiological_validation",
+    "l_freq": 1.0,
+    "h_freq": 100.0,
+    "notch_freq": 50.0,
+    "target_sfreq": 200.0,
+    "demean": true,
+    "normalization": "per_window_channel_zscore"
+  },
+  "scope_note": "The paper reports z-score normalization but not its scope. This recreation uses each selected 10-second channel.",
+  "selection_status": "INFERRED",
+  "scope": "EEG panels only; PSG modalities are outside the paper's modeling scope"
+}

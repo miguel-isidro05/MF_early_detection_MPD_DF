@@ -1,0 +1,351 @@
+subject,label,label_name,seconds,normalized_118min_seconds,annotation_blocks
+01,0,Wakefulness,6556,6434,226
+01,1,Fatigue1,646,646,27
+01,2,Fatigue2,0,0,0
+01,3,Fatigue3,0,0,0
+01,4,Fatigue4,0,0,0
+01,8,Signal Abnormality,0,0,0
+01,9,Severe Artifacts,0,0,0
+02,0,Wakefulness,4849,4727,184
+02,1,Fatigue1,1931,1931,87
+02,2,Fatigue2,422,422,18
+02,3,Fatigue3,0,0,0
+02,4,Fatigue4,0,0,0
+02,8,Signal Abnormality,0,0,0
+02,9,Severe Artifacts,0,0,0
+03,0,Wakefulness,6386,6326,218
+03,1,Fatigue1,818,754,34
+03,2,Fatigue2,0,0,0
+03,3,Fatigue3,0,0,0
+03,4,Fatigue4,0,0,0
+03,8,Signal Abnormality,0,0,0
+03,9,Severe Artifacts,0,0,0
+04,0,Wakefulness,2246,2155,85
+04,1,Fatigue1,2388,2365,96
+04,2,Fatigue2,2403,2403,89
+04,3,Fatigue3,157,157,8
+04,4,Fatigue4,0,0,0
+04,8,Signal Abnormality,0,0,0
+04,9,Severe Artifacts,0,0,0
+05,0,Wakefulness,1374,1314,49
+05,1,Fatigue1,1884,1884,68
+05,2,Fatigue2,0,0,0
+05,3,Fatigue3,0,0,0
+05,4,Fatigue4,0,0,0
+05,8,Signal Abnormality,0,0,0
+05,9,Severe Artifacts,3943,3882,133
+06,0,Wakefulness,5678,5556,203
+06,1,Fatigue1,1464,1464,61
+06,2,Fatigue2,60,60,3
+06,3,Fatigue3,0,0,0
+06,4,Fatigue4,0,0,0
+06,8,Signal Abnormality,0,0,0
+06,9,Severe Artifacts,0,0,0
+07,0,Wakefulness,6819,6698,229
+07,1,Fatigue1,213,213,8
+07,2,Fatigue2,169,169,8
+07,3,Fatigue3,0,0,0
+07,4,Fatigue4,0,0,0
+07,8,Signal Abnormality,0,0,0
+07,9,Severe Artifacts,0,0,0
+08,0,Wakefulness,7175,7059,240
+08,1,Fatigue1,21,21,1
+08,2,Fatigue2,0,0,0
+08,3,Fatigue3,0,0,0
+08,4,Fatigue4,0,0,0
+08,8,Signal Abnormality,0,0,0
+08,9,Severe Artifacts,0,0,0
+09,0,Wakefulness,1892,1807,79
+09,1,Fatigue1,4094,4064,158
+09,2,Fatigue2,1209,1209,50
+09,3,Fatigue3,0,0,0
+09,4,Fatigue4,0,0,0
+09,8,Signal Abnormality,0,0,0
+09,9,Severe Artifacts,0,0,0
+10,0,Wakefulness,5964,5904,218
+10,1,Fatigue1,1134,1051,56
+10,2,Fatigue2,327,125,16
+10,3,Fatigue3,366,0,13
+10,4,Fatigue4,310,0,12
+10,8,Signal Abnormality,0,0,0
+10,9,Severe Artifacts,0,0,0
+11,0,Wakefulness,5915,5754,211
+11,1,Fatigue1,1219,1219,53
+11,2,Fatigue2,107,107,8
+11,3,Fatigue3,0,0,0
+11,4,Fatigue4,0,0,0
+11,8,Signal Abnormality,0,0,0
+11,9,Severe Artifacts,0,0,0
+12,0,Wakefulness,6907,6756,234
+12,1,Fatigue1,41,41,3
+12,2,Fatigue2,283,283,11
+12,3,Fatigue3,0,0,0
+12,4,Fatigue4,0,0,0
+12,8,Signal Abnormality,0,0,0
+12,9,Severe Artifacts,0,0,0
+13,0,Wakefulness,4325,3636,161
+13,1,Fatigue1,3625,3298,138
+13,2,Fatigue2,146,146,7
+13,3,Fatigue3,0,0,0
+13,4,Fatigue4,0,0,0
+13,8,Signal Abnormality,0,0,0
+13,9,Severe Artifacts,0,0,0
+14,0,Wakefulness,6954,6864,233
+14,1,Fatigue1,302,216,11
+14,2,Fatigue2,0,0,0
+14,3,Fatigue3,0,0,0
+14,4,Fatigue4,0,0,0
+14,8,Signal Abnormality,0,0,0
+14,9,Severe Artifacts,0,0,0
+15,0,Wakefulness,4392,4080,162
+15,1,Fatigue1,3107,2764,125
+15,2,Fatigue2,301,236,17
+15,3,Fatigue3,0,0,0
+15,4,Fatigue4,0,0,0
+15,8,Signal Abnormality,0,0,0
+15,9,Severe Artifacts,0,0,0
+16,0,Wakefulness,7063,6642,239
+16,1,Fatigue1,438,438,18
+16,2,Fatigue2,0,0,0
+16,3,Fatigue3,0,0,0
+16,4,Fatigue4,0,0,0
+16,8,Signal Abnormality,0,0,0
+16,9,Severe Artifacts,0,0,0
+17,0,Wakefulness,4293,4146,161
+17,1,Fatigue1,2452,2328,112
+17,2,Fatigue2,606,606,29
+17,3,Fatigue3,0,0,0
+17,4,Fatigue4,0,0,0
+17,8,Signal Abnormality,0,0,0
+17,9,Severe Artifacts,0,0,0
+18,0,Wakefulness,7140,6988,240
+18,1,Fatigue1,92,92,4
+18,2,Fatigue2,149,0,6
+18,3,Fatigue3,0,0,0
+18,4,Fatigue4,0,0,0
+18,8,Signal Abnormality,0,0,0
+18,9,Severe Artifacts,0,0,0
+19,0,Wakefulness,6675,6565,226
+19,1,Fatigue1,111,111,6
+19,2,Fatigue2,340,239,20
+19,3,Fatigue3,256,165,14
+19,4,Fatigue4,0,0,0
+19,8,Signal Abnormality,0,0,0
+19,9,Severe Artifacts,0,0,0
+20,0,Wakefulness,7226,7045,243
+20,1,Fatigue1,35,35,2
+20,2,Fatigue2,0,0,0
+20,3,Fatigue3,0,0,0
+20,4,Fatigue4,0,0,0
+20,8,Signal Abnormality,0,0,0
+20,9,Severe Artifacts,0,0,0
+21,0,Wakefulness,7059,6874,237
+21,1,Fatigue1,0,0,0
+21,2,Fatigue2,236,0,9
+21,3,Fatigue3,0,0,0
+21,4,Fatigue4,0,0,0
+21,8,Signal Abnormality,0,0,0
+21,9,Severe Artifacts,206,206,8
+22,0,Wakefulness,0,0,0
+22,1,Fatigue1,1903,1657,75
+22,2,Fatigue2,5898,5423,207
+22,3,Fatigue3,0,0,0
+22,4,Fatigue4,0,0,0
+22,8,Signal Abnormality,0,0,0
+22,9,Severe Artifacts,0,0,0
+23,0,Wakefulness,7320,7080,244
+23,1,Fatigue1,210,0,7
+23,2,Fatigue2,0,0,0
+23,3,Fatigue3,0,0,0
+23,4,Fatigue4,0,0,0
+23,8,Signal Abnormality,0,0,0
+23,9,Severe Artifacts,0,0,0
+24,0,Wakefulness,7291,7080,244
+24,1,Fatigue1,221,0,8
+24,2,Fatigue2,30,0,2
+24,3,Fatigue3,0,0,0
+24,4,Fatigue4,0,0,0
+24,8,Signal Abnormality,0,0,0
+24,9,Severe Artifacts,0,0,0
+25,0,Wakefulness,3620,3560,128
+25,1,Fatigue1,3396,3240,124
+25,2,Fatigue2,476,280,19
+25,3,Fatigue3,0,0,0
+25,4,Fatigue4,0,0,0
+25,8,Signal Abnormality,0,0,0
+25,9,Severe Artifacts,0,0,0
+26,0,Wakefulness,6688,6546,227
+26,1,Fatigue1,534,534,26
+26,2,Fatigue2,273,0,10
+26,3,Fatigue3,0,0,0
+26,4,Fatigue4,0,0,0
+26,8,Signal Abnormality,0,0,0
+26,9,Severe Artifacts,0,0,0
+27,0,Wakefulness,7588,7080,253
+27,1,Fatigue1,61,0,3
+27,2,Fatigue2,152,0,7
+27,3,Fatigue3,0,0,0
+27,4,Fatigue4,0,0,0
+27,8,Signal Abnormality,0,0,0
+27,9,Severe Artifacts,0,0,0
+28,0,Wakefulness,7392,7080,247
+28,1,Fatigue1,0,0,0
+28,2,Fatigue2,229,0,9
+28,3,Fatigue3,0,0,0
+28,4,Fatigue4,0,0,0
+28,8,Signal Abnormality,0,0,0
+28,9,Severe Artifacts,0,0,0
+29,0,Wakefulness,7469,6913,251
+29,1,Fatigue1,194,167,10
+29,2,Fatigue2,131,0,6
+29,3,Fatigue3,0,0,0
+29,4,Fatigue4,0,0,0
+29,8,Signal Abnormality,0,0,0
+29,9,Severe Artifacts,0,0,0
+30,0,Wakefulness,5140,4710,180
+30,1,Fatigue1,887,887,41
+30,2,Fatigue2,1116,890,46
+30,3,Fatigue3,0,0,0
+30,4,Fatigue4,0,0,0
+30,8,Signal Abnormality,593,593,23
+30,9,Severe Artifacts,0,0,0
+31,0,Wakefulness,4129,3993,142
+31,1,Fatigue1,2775,2578,106
+31,2,Fatigue2,597,509,25
+31,3,Fatigue3,0,0,0
+31,4,Fatigue4,0,0,0
+31,8,Signal Abnormality,0,0,0
+31,9,Severe Artifacts,0,0,0
+32,0,Wakefulness,3509,3421,133
+32,1,Fatigue1,3806,3659,144
+32,2,Fatigue2,187,0,8
+32,3,Fatigue3,0,0,0
+32,4,Fatigue4,0,0,0
+32,8,Signal Abnormality,0,0,0
+32,9,Severe Artifacts,0,0,0
+33,0,Wakefulness,5770,5597,212
+33,1,Fatigue1,1458,1389,65
+33,2,Fatigue2,273,94,11
+33,3,Fatigue3,0,0,0
+33,4,Fatigue4,0,0,0
+33,8,Signal Abnormality,0,0,0
+33,9,Severe Artifacts,0,0,0
+34,0,Wakefulness,6380,6142,215
+34,1,Fatigue1,684,654,27
+34,2,Fatigue2,194,72,9
+34,3,Fatigue3,242,212,9
+34,4,Fatigue4,0,0,0
+34,8,Signal Abnormality,0,0,0
+34,9,Severe Artifacts,0,0,0
+35,0,Wakefulness,2350,2290,85
+35,1,Fatigue1,4775,4539,169
+35,2,Fatigue2,415,251,18
+35,3,Fatigue3,21,0,2
+35,4,Fatigue4,0,0,0
+35,8,Signal Abnormality,0,0,0
+35,9,Severe Artifacts,0,0,0
+36,0,Wakefulness,5898,5674,211
+36,1,Fatigue1,1452,1406,63
+36,2,Fatigue2,148,0,5
+36,3,Fatigue3,0,0,0
+36,4,Fatigue4,0,0,0
+36,8,Signal Abnormality,0,0,0
+36,9,Severe Artifacts,0,0,0
+37,0,Wakefulness,6925,6680,235
+37,1,Fatigue1,400,400,18
+37,2,Fatigue2,178,0,7
+37,3,Fatigue3,0,0,0
+37,4,Fatigue4,0,0,0
+37,8,Signal Abnormality,0,0,0
+37,9,Severe Artifacts,0,0,0
+38,0,Wakefulness,7606,7080,254
+38,1,Fatigue1,0,0,0
+38,2,Fatigue2,200,0,8
+38,3,Fatigue3,0,0,0
+38,4,Fatigue4,0,0,0
+38,8,Signal Abnormality,0,0,0
+38,9,Severe Artifacts,0,0,0
+39,0,Wakefulness,7140,6903,240
+39,1,Fatigue1,177,177,8
+39,2,Fatigue2,213,0,8
+39,3,Fatigue3,0,0,0
+39,4,Fatigue4,0,0,0
+39,8,Signal Abnormality,0,0,0
+39,9,Severe Artifacts,0,0,0
+40,0,Wakefulness,4271,4083,160
+40,1,Fatigue1,2871,2772,117
+40,2,Fatigue2,424,225,20
+40,3,Fatigue3,0,0,0
+40,4,Fatigue4,0,0,0
+40,8,Signal Abnormality,0,0,0
+40,9,Severe Artifacts,0,0,0
+41,0,Wakefulness,5377,5143,195
+41,1,Fatigue1,1937,1937,78
+41,2,Fatigue2,217,0,9
+41,3,Fatigue3,0,0,0
+41,4,Fatigue4,0,0,0
+41,8,Signal Abnormality,0,0,0
+41,9,Severe Artifacts,0,0,0
+42,0,Wakefulness,5374,5314,180
+42,1,Fatigue1,0,0,0
+42,2,Fatigue2,0,0,0
+42,3,Fatigue3,0,0,0
+42,4,Fatigue4,0,0,0
+42,8,Signal Abnormality,0,0,0
+42,9,Severe Artifacts,0,0,0
+43,0,Wakefulness,4520,4371,160
+43,1,Fatigue1,2334,2243,92
+43,2,Fatigue2,648,466,28
+43,3,Fatigue3,0,0,0
+43,4,Fatigue4,0,0,0
+43,8,Signal Abnormality,0,0,0
+43,9,Severe Artifacts,0,0,0
+44,0,Wakefulness,5983,5737,208
+44,1,Fatigue1,1282,1282,54
+44,2,Fatigue2,267,61,11
+44,3,Fatigue3,0,0,0
+44,4,Fatigue4,0,0,0
+44,8,Signal Abnormality,0,0,0
+44,9,Severe Artifacts,0,0,0
+45,0,Wakefulness,5012,4926,184
+45,1,Fatigue1,1849,1818,84
+45,2,Fatigue2,210,75,9
+45,3,Fatigue3,456,226,23
+45,4,Fatigue4,0,0,0
+45,8,Signal Abnormality,0,0,0
+45,9,Severe Artifacts,35,35,3
+46,0,Wakefulness,5148,4901,198
+46,1,Fatigue1,2179,2179,95
+46,2,Fatigue2,174,0,7
+46,3,Fatigue3,0,0,0
+46,4,Fatigue4,0,0,0
+46,8,Signal Abnormality,0,0,0
+46,9,Severe Artifacts,0,0,0
+47,0,Wakefulness,3766,3706,131
+47,1,Fatigue1,261,261,13
+47,2,Fatigue2,176,0,7
+47,3,Fatigue3,0,0,0
+47,4,Fatigue4,0,0,0
+47,8,Signal Abnormality,0,0,0
+47,9,Severe Artifacts,3300,3113,112
+48,0,Wakefulness,5832,5620,216
+48,1,Fatigue1,1505,1460,70
+48,2,Fatigue2,211,0,8
+48,3,Fatigue3,0,0,0
+48,4,Fatigue4,0,0,0
+48,8,Signal Abnormality,0,0,0
+48,9,Severe Artifacts,0,0,0
+49,0,Wakefulness,7342,7080,245
+49,1,Fatigue1,0,0,0
+49,2,Fatigue2,0,0,0
+49,3,Fatigue3,0,0,0
+49,4,Fatigue4,0,0,0
+49,8,Signal Abnormality,0,0,0
+49,9,Severe Artifacts,0,0,0
+50,0,Wakefulness,6817,6364,234
+50,1,Fatigue1,835,716,36
+50,2,Fatigue2,178,0,6
+50,3,Fatigue3,0,0,0
+50,4,Fatigue4,0,0,0
+50,8,Signal Abnormality,0,0,0
+50,9,Severe Artifacts,0,0,0

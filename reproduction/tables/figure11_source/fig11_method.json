@@ -1,0 +1,16 @@
+{
+  "status": "NO_ICA_DIAGNOSTIC_NOT_REFERENCE_REPRODUCTION",
+  "reason": "The paper does not report removed ICA components or deterministic ocular/muscular rejection criteria.",
+  "preprocessing": {
+    "name": "annotation_visualization",
+    "l_freq": 0.3,
+    "h_freq": 35.0,
+    "notch_freq": 50.0,
+    "target_sfreq": null,
+    "demean": true,
+    "normalization": "none"
+  },
+  "psd": "Welch, 2-second subwindows, integrated 1-30 Hz",
+  "psd_status": "INFERRED",
+  "segment_policy": "non-overlapping aligned 30-second clean single-label segments"
+}

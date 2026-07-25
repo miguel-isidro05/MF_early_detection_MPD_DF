@@ -1,0 +1,6 @@
+label,label_name,subject,aligned_start_sec,eeg_start_sec,duration_sec,selection_rule,status
+0,Wakefulness,10,0,11,30,first_continuous_30s_segment,INFERRED_SEGMENT_SELECTION
+1,Fatigue1,10,1135,1146,30,first_continuous_30s_segment,INFERRED_SEGMENT_SELECTION
+2,Fatigue2,10,2450,2461,30,first_continuous_30s_segment,INFERRED_SEGMENT_SELECTION
+3,Fatigue3,10,7351,7362,30,first_continuous_30s_segment,INFERRED_SEGMENT_SELECTION
+4,Fatigue4,10,7791,7802,30,first_continuous_30s_segment,INFERRED_SEGMENT_SELECTION

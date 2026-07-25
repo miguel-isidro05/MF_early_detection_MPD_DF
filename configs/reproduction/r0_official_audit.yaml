@@ -1,0 +1,9 @@
+name: r0_official_audit
+seed: 42
+task: C
+window_sec: 1
+stride_sec: 1
+alignment: official_overlap_headers
+model: none
+purpose: inspect_official_alignment_only
+

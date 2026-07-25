@@ -1,0 +1,7 @@
+name: task_definition_ablation
+seed: 42
+tasks:
+  A: {negative: [0], positive: [1]}
+  B: {negative: [0], positive: [1, 2]}
+  C: {negative: [0], positive: [1, 2, 3, 4]}
+
