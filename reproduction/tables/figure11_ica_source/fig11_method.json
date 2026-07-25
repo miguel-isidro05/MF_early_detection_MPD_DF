@@ -1,0 +1,56 @@
+{
+  "status": "ICA_REPRODUCTION_DIAGNOSTIC",
+  "limitation": "The paper does not report its EEGLAB ICA components or rejection criteria; the deterministic CLEI FastICA policy is transferred for reproducibility.",
+  "preprocessing": {
+    "name": "annotation_visualization",
+    "l_freq": 0.3,
+    "h_freq": 35.0,
+    "notch_freq": null,
+    "target_sfreq": null,
+    "notch_band": [
+      49.0,
+      51.0
+    ],
+    "demean": true,
+    "normalization": "none"
+  },
+  "ica": {
+    "implementation_source": "CLEI_2026/benchmark/src/preprocessing.py::apply_ica_fit_train_apply",
+    "fit_filter": {
+      "l_freq_hz": 1.0,
+      "h_freq_hz": null
+    },
+    "method": "fastica",
+    "n_components": 0.99,
+    "random_state": 42,
+    "kurtosis_threshold": 10.0,
+    "max_removed_components": 2,
+    "excluded_components": [
+      14,
+      6
+    ],
+    "component_kurtosis": [
+      8.668524496192196,
+      11.104515481355193,
+      8.684749027683107,
+      130.23666034605816,
+      88.54254101068993,
+      5.167403831362973,
+      151.256721709543,
+      119.61946032890962,
+      4.846370529272582,
+      44.8883494044747,
+      53.52306037743769,
+      6.5269012765533665,
+      14.518926431863056,
+      6.757807778809609,
+      1045.7972418414563,
+      11.094245339894512,
+      6.318540773981186,
+      11.793132358328178
+    ]
+  },
+  "psd": "Welch, 2-second subwindows, mean PSD then sum of 0.3-35 Hz density bins, converted to uV^2/Hz",
+  "psd_status": "INFERRED_FROM_FIGURE11_COLOR_SCALE",
+  "segment_policy": "non-overlapping aligned 30-second clean single-label segments"
+}
