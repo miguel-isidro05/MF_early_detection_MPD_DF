@@ -16,6 +16,7 @@ class PreprocessingConfig:
     h_freq: float | None
     notch_freq: float | None
     target_sfreq: float | None
+    notch_band: tuple[float, float] | None = None
     demean: bool = True
     normalization: str = "none"
 
@@ -47,8 +48,9 @@ ANNOTATION_VISUALIZATION = PreprocessingConfig(
     name="annotation_visualization",
     l_freq=0.3,
     h_freq=35.0,
-    notch_freq=50.0,
+    notch_freq=None,
     target_sfreq=None,
+    notch_band=(49.0, 51.0),
     demean=True,
     normalization="none",
 )
@@ -66,7 +68,17 @@ def preprocess_batch(
         raise ValueError("windows must have shape (batch, channels, samples)")
     if config.demean:
         data = data - data.mean(axis=-1, keepdims=True)
-    if config.notch_freq is not None:
+    if config.notch_band is not None:
+        low, high = config.notch_band
+        nyquist = sfreq / 2.0
+        if not 0.0 < low < high < nyquist:
+            raise ValueError("notch_band must lie strictly inside the Nyquist range")
+        data = sosfiltfilt(
+            butter(4, [low / nyquist, high / nyquist], btype="bandstop", output="sos"),
+            data,
+            axis=-1,
+        )
+    elif config.notch_freq is not None:
         b, a = iirnotch(config.notch_freq, Q=30.0, fs=sfreq)
         data = sosfiltfilt(tf2sos(b, a), data, axis=-1)
     if config.l_freq is not None or config.h_freq is not None:
@@ -95,4 +107,3 @@ def preprocess_batch(
     elif config.normalization != "none":
         raise ValueError(f"Unsupported normalization: {config.normalization}")
     return data.astype(np.float32), output_sfreq
-

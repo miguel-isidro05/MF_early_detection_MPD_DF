@@ -78,6 +78,9 @@ as an exact reproduction of Table 9 because the public paper and repository omit
 the training code, split, classification preprocessing, metric averaging, channel
 subset, and artifact policy.
 
+See `PREPROCESSING_PROTOCOL.md` for the paper-confirmed visualization profiles,
+the standardized Task A/B benchmark profile, and the limits of Figure 11.
+
 ## RTX transfer
 
 The portable data archive is written to `packages/mpd_df_eeg_only_rtx.zip`. It

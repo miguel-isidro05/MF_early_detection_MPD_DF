@@ -1,6 +1,10 @@
 import numpy as np
 
-from mpd_df.preprocessing import PHYSIOLOGICAL_VALIDATION, preprocess_batch
+from mpd_df.preprocessing import (
+    ANNOTATION_VISUALIZATION,
+    PHYSIOLOGICAL_VALIDATION,
+    preprocess_batch,
+)
 
 
 def test_physiological_pipeline_downsamples_and_normalizes() -> None:
@@ -12,3 +16,18 @@ def test_physiological_pipeline_downsamples_and_normalizes() -> None:
     assert np.allclose(processed.mean(axis=-1), 0.0, atol=1e-5)
     assert np.allclose(processed.std(axis=-1), 1.0, atol=1e-4)
 
+
+def test_annotation_profile_uses_published_49_to_51_hz_bandstop() -> None:
+    sfreq = 500.0
+    time = np.arange(int(20 * sfreq)) / sfreq
+    low_frequency = np.sin(2 * np.pi * 10 * time)
+    line_frequency = np.sin(2 * np.pi * 50 * time)
+    windows = (low_frequency + line_frequency)[None, None, :]
+
+    processed, output_sfreq = preprocess_batch(windows, sfreq, ANNOTATION_VISUALIZATION)
+    retained_10_hz = np.abs(np.mean(processed[0, 0] * low_frequency)) * 2
+    retained_50_hz = np.abs(np.mean(processed[0, 0] * line_frequency)) * 2
+
+    assert output_sfreq == sfreq
+    assert retained_10_hz > 0.8
+    assert retained_50_hz < 0.1
