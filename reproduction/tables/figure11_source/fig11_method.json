@@ -5,12 +5,16 @@
     "name": "annotation_visualization",
     "l_freq": 0.3,
     "h_freq": 35.0,
-    "notch_freq": 50.0,
+    "notch_freq": null,
     "target_sfreq": null,
+    "notch_band": [
+      49.0,
+      51.0
+    ],
     "demean": true,
     "normalization": "none"
   },
-  "psd": "Welch, 2-second subwindows, integrated 1-30 Hz, converted to uV^2",
-  "psd_status": "INFERRED",
+  "psd": "Welch, 2-second subwindows, mean PSD then sum of 0.3-35 Hz density bins, converted to uV^2/Hz",
+  "psd_status": "INFERRED_FROM_FIGURE11_COLOR_SCALE",
   "segment_policy": "non-overlapping aligned 30-second clean single-label segments"
 }

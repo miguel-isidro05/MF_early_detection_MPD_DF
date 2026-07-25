@@ -35,8 +35,12 @@ Published procedure: Figure 6 preprocessing plus EEGLAB ICA to remove ocular and
 muscular components before average PSD topographies. The public material does not
 identify ICA components, rejection thresholds, PSD estimator, or segment choices.
 `plot_psd_topographies.py` intentionally produces a clearly labeled **no-ICA
-diagnostic**, not an exact Figure 11 reproduction. Its values and color pattern
-must not be used to validate or claim exact agreement with the published map.
+diagnostic**, not an exact Figure 11 reproduction. It averages Welch PSD estimates
+over clean 30-second segments and sums the 0.3-35 Hz PSD bins. This inferred
+aggregation produces a 0-5,000-scale magnitude consistent with the published
+color bar, unlike the previous 1-30 Hz integrated-band-power diagnostic. ICA can
+still materially alter the spatial pattern, so the result must not be claimed as
+exact agreement with the published map.
 
 ## Classification benchmark: Task A and B
 

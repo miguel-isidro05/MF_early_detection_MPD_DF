@@ -70,8 +70,10 @@ def main() -> None:
             nperseg=int(round(2 * output_sfreq)),
             axis=-1,
         )
-        mask = (frequencies >= 1.0) & (frequencies <= 30.0)
-        powers[label].append(np.trapezoid(psd[:, mask], frequencies[mask], axis=-1))
+        # The paper labels Figure 11 as "average PSD" and its 0-5000 color scale
+        # matches a sum of the 0.3-35 Hz PSD bins, not 1-30 Hz band-power integration.
+        mask = (frequencies >= 0.3) & (frequencies <= 35.0)
+        powers[label].append(psd[:, mask].sum(axis=-1))
         segment_rows.append(
             {
                 "subject": args.subject,
@@ -117,8 +119,11 @@ def main() -> None:
                     "ocular/muscular rejection criteria."
                 ),
                 "preprocessing": config.to_dict(),
-                "psd": "Welch, 2-second subwindows, integrated 1-30 Hz, converted to uV^2",
-                "psd_status": "INFERRED",
+                "psd": (
+                    "Welch, 2-second subwindows, mean PSD then sum of 0.3-35 Hz "
+                    "density bins, converted to uV^2/Hz"
+                ),
+                "psd_status": "INFERRED_FROM_FIGURE11_COLOR_SCALE",
                 "segment_policy": "non-overlapping aligned 30-second clean single-label segments",
             },
             indent=2,
@@ -146,8 +151,8 @@ def main() -> None:
         )
         axis.set_title(f"{chr(97 + label)}  {LABEL_NAMES[label]}")
     axes.flat[-1].axis("off")
-    figure.colorbar(image, ax=axes.ravel().tolist(), shrink=0.75, label="Integrated PSD (µV²)")
-    figure.suptitle("Participant 10 | closest no-ICA diagnostic | inferred PSD method")
+    figure.colorbar(image, ax=axes.ravel().tolist(), shrink=0.75, label="Summed PSD bins (µV²/Hz)")
+    figure.suptitle("Participant 10 | no-ICA diagnostic | PSD aggregation inferred from Figure 11")
     figure.savefig(args.output_dir / "figure11_psd_topographies_no_ica.png", dpi=300)
     figure.savefig(args.output_dir / "figure11_psd_topographies_no_ica.pdf")
     plt.close(figure)
