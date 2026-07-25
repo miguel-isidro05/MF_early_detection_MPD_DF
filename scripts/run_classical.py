@@ -169,7 +169,10 @@ def main() -> None:
     )
     output = initialize_experiment(args.output_dir, context, config, command, args.project_root)
     (output / "feature_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    pd.DataFrame(exclusions).to_csv(output / "excluded_subjects.csv", index=False)
+    pd.DataFrame(exclusions, columns=["subject", "reason"]).to_csv(
+        output / "excluded_subjects.csv",
+        index=False,
+    )
     assignments = []
     for fold, (train, test) in enumerate(split_list):
         assignments.append(

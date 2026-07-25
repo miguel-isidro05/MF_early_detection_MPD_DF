@@ -33,6 +33,10 @@ def within_subject_splits(
     subjects = metadata["subject"].astype(str).unique()
     if len(subjects) != 1:
         raise ValueError("within_subject_splits requires exactly one subject")
+    observed_classes = set(np.unique(y).tolist())
+    if observed_classes != {0, 1}:
+        missing = sorted({0, 1} - observed_classes)
+        raise ValueError(f"Both binary classes are required; missing classes: {missing}")
     groups = metadata["group_id"].to_numpy()
     class_group_counts = [
         np.unique(groups[y == class_id]).size for class_id in np.unique(y)
@@ -55,4 +59,3 @@ def loso_splits(metadata: pd.DataFrame) -> Iterator[tuple[np.ndarray, np.ndarray
         if train_subjects & test_subjects:
             raise AssertionError("Subject leakage detected")
         yield train, test
-

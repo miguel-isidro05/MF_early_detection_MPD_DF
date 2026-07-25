@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pytest
 
 from mpd_df.splits import loso_splits, within_subject_splits
 
@@ -27,3 +28,13 @@ def test_loso_keeps_subjects_disjoint() -> None:
     for train, test in splits:
         assert set(subjects[train]).isdisjoint(subjects[test])
 
+
+def test_within_subject_rejects_single_class_subject() -> None:
+    metadata = pd.DataFrame(
+        {
+            "subject": ["42"] * 12,
+            "group_id": [f"42:{index}" for index in range(12)],
+        }
+    )
+    with pytest.raises(ValueError, match="missing classes"):
+        list(within_subject_splits(metadata, np.zeros(12, dtype=int)))
