@@ -104,7 +104,7 @@ def main() -> None:
         for files in discover_subjects(args.raw_root, include_psg=True)
         if not requested or files.subject in requested
     ]
-    if requested != {files.subject for files in subjects}:
+    if requested and requested != {files.subject for files in subjects}:
         raise ValueError("One or more requested subjects were not found")
     manifest = {
         "task": args.task,
