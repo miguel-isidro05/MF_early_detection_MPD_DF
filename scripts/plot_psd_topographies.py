@@ -17,7 +17,11 @@ from scipy.signal import welch
 
 from mpd_df.constants import EDF_CHANNELS, LABEL_NAMES
 from mpd_df.dataset import EDF_ASSUMED_SCALE_TO_VOLTS, build_alignment, discover_subjects
-from mpd_df.preprocessing import ANNOTATION_VISUALIZATION, preprocess_batch
+from mpd_df.preprocessing import (
+    ANNOTATION_VISUALIZATION,
+    MNE_EEGLAB_LIKE,
+    preprocess_batch,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -27,6 +31,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--source-dir", type=Path, required=True)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--preprocessing",
+        choices=("annotation_visualization", "mne_eeglab_like"),
+        default="annotation_visualization",
+    )
     parser.add_argument("--ica-kurtosis-threshold", type=float, default=10.0)
     parser.add_argument("--ica-max-excluded", type=int, default=2)
     parser.add_argument("--average-reference", action="store_true")
@@ -117,7 +126,11 @@ def main() -> None:
     raw = mne.io.read_raw_edf(files.eeg, preload=False, verbose="ERROR")
     raw.pick(list(EDF_CHANNELS))
     sfreq = float(raw.info["sfreq"])
-    config = replace(ANNOTATION_VISUALIZATION, normalization="none")
+    profiles = {
+        "annotation_visualization": ANNOTATION_VISUALIZATION,
+        "mne_eeglab_like": MNE_EEGLAB_LIKE,
+    }
+    config = replace(profiles[args.preprocessing], normalization="none")
     segments_by_label = {label: [] for label in range(5)}
     segment_rows = []
     context = 10
@@ -231,7 +244,7 @@ def main() -> None:
     (args.source_dir / "fig11_method.json").write_text(
         json.dumps(
             {
-                "status": "ICA_REPRODUCTION_DIAGNOSTIC",
+                "status": "MNE_ICA_REPRODUCTION_DIAGNOSTIC",
                 "limitation": (
                     "The paper does not report its EEGLAB ICA components or rejection criteria; "
                     "the deterministic CLEI FastICA policy is transferred for reproducibility."
@@ -277,8 +290,8 @@ def main() -> None:
     unit = "PSD bins (µV²/Hz)" if args.psd_mode == "sum_linear" else "PSD (dB/Hz)" if "db" in args.psd_mode else "Mean PSD (µV²/Hz)"
     figure.colorbar(image, ax=axes.ravel().tolist(), shrink=0.75, label=unit)
     figure.suptitle(
-        "Participant 10 | 1 Hz FastICA | "
-        f"PSD={args.psd_mode} | CAR={args.average_reference}"
+        "Participant 10 | MNE 1 Hz FastICA | "
+        f"preproc={args.preprocessing} | PSD={args.psd_mode} | CAR={args.average_reference}"
     )
     figure.savefig(args.output_dir / "figure11_psd_topographies_ica.png", dpi=300)
     figure.savefig(args.output_dir / "figure11_psd_topographies_ica.pdf")

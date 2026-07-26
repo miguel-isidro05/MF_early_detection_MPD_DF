@@ -1,0 +1,58 @@
+{
+  "status": "MNE_ICA_REPRODUCTION_DIAGNOSTIC",
+  "limitation": "The paper does not report its EEGLAB ICA components or rejection criteria; the deterministic CLEI FastICA policy is transferred for reproducibility.",
+  "preprocessing": {
+    "name": "mne_eeglab_like",
+    "l_freq": 0.3,
+    "h_freq": 35.0,
+    "notch_freq": 50.0,
+    "target_sfreq": null,
+    "notch_band": null,
+    "demean": true,
+    "normalization": "none",
+    "filter_backend": "mne_fir_zero_double"
+  },
+  "figure6_edge_trim_sec": 60,
+  "average_reference": false,
+  "ica": {
+    "implementation_source": "CLEI_2026/benchmark/src/preprocessing.py::apply_ica_fit_train_apply",
+    "fit_filter": {
+      "l_freq_hz": 1.0,
+      "h_freq_hz": null
+    },
+    "method": "fastica",
+    "n_components": 0.99,
+    "random_state": 42,
+    "kurtosis_threshold": 10.0,
+    "max_removed_components": 2,
+    "excluded_components": [
+      13,
+      2
+    ],
+    "component_kurtosis": [
+      8.599932011618895,
+      10.07219407597806,
+      142.25918232180135,
+      8.604272398964236,
+      81.81647144115563,
+      141.04809560756806,
+      138.88713721167855,
+      4.1438912122396765,
+      5.7775250385109755,
+      49.90893953062677,
+      6.889237623748606,
+      41.007686674509344,
+      6.641575561085986,
+      976.527658860732,
+      15.454675296948672,
+      11.650814257957022,
+      22.458785677005956,
+      6.378108103325548,
+      30.250612690839233
+    ]
+  },
+  "psd": "Welch, 2-second subwindows, 0.3-35 Hz, mode=sum_linear",
+  "epoch_aggregation": "mean",
+  "psd_status": "dB modes are sensitivity analyses; the published 0-5000 scale is linear.",
+  "segment_policy": "non-overlapping aligned 30-second clean single-label segments"
+}
