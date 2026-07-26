@@ -22,6 +22,7 @@ from mpd_df.dataset import (
 )
 from mpd_df.preprocessing import (
     ANNOTATION_VISUALIZATION,
+    MNE_EEGLAB_LIKE,
     PHYSIOLOGICAL_VALIDATION,
     REFERENCE_UNSPECIFIED,
 )
@@ -32,6 +33,7 @@ PREPROCESSING = {
         REFERENCE_UNSPECIFIED,
         PHYSIOLOGICAL_VALIDATION,
         ANNOTATION_VISUALIZATION,
+        MNE_EEGLAB_LIKE,
     )
 }
 

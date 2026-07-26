@@ -2,6 +2,7 @@ import numpy as np
 
 from mpd_df.preprocessing import (
     ANNOTATION_VISUALIZATION,
+    MNE_EEGLAB_LIKE,
     PHYSIOLOGICAL_VALIDATION,
     preprocess_batch,
 )
@@ -25,6 +26,22 @@ def test_annotation_profile_uses_published_49_to_51_hz_bandstop() -> None:
     windows = (low_frequency + line_frequency)[None, None, :]
 
     processed, output_sfreq = preprocess_batch(windows, sfreq, ANNOTATION_VISUALIZATION)
+    retained_10_hz = np.abs(np.mean(processed[0, 0] * low_frequency)) * 2
+    retained_50_hz = np.abs(np.mean(processed[0, 0] * line_frequency)) * 2
+
+    assert output_sfreq == sfreq
+    assert retained_10_hz > 0.8
+    assert retained_50_hz < 0.1
+
+
+def test_mne_eeglab_like_profile_uses_native_rate_and_fir_notch() -> None:
+    sfreq = 500.0
+    time = np.arange(int(30 * sfreq)) / sfreq
+    low_frequency = np.sin(2 * np.pi * 10 * time)
+    line_frequency = np.sin(2 * np.pi * 50 * time)
+    windows = (low_frequency + line_frequency)[None, None, :]
+
+    processed, output_sfreq = preprocess_batch(windows, sfreq, MNE_EEGLAB_LIKE)
     retained_10_hz = np.abs(np.mean(processed[0, 0] * low_frequency)) * 2
     retained_50_hz = np.abs(np.mean(processed[0, 0] * line_frequency)) * 2
 

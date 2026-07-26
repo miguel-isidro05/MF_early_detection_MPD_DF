@@ -59,7 +59,7 @@ python scripts/extract_eeg_windows.py \
   --raw-root "data/raw/mpd_df_raw_full/Raw Dataset" \
   --output-dir data/derived/task_c_eeg \
   --task C \
-  --preprocessing physiological_validation \
+  --preprocessing mne_eeglab_like \
   --montage paper28 \
   --filter-scope group_bounded
 

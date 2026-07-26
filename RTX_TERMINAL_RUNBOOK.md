@@ -53,13 +53,13 @@ ALLOWLIST=data/metadata/eligible_within_task_a.txt
 python scripts/extract_psd_features.py \
   --raw-root data/raw/MPD_DF_EEG_ONLY \
   --output-dir data/derived/psd_${TASK}_1s_paper28 \
-  --task ${TASK} --preprocessing physiological_validation --montage paper28 \
+  --task ${TASK} --preprocessing mne_eeglab_like --montage paper28 \
   --window-sec 1 --stride-sec 1 --filter-scope group_bounded
 
 python scripts/extract_eeg_windows.py \
   --raw-root data/raw/MPD_DF_EEG_ONLY \
   --output-dir data/derived/eeg_${TASK}_1s_paper28 \
-  --task ${TASK} --preprocessing physiological_validation --montage paper28 \
+  --task ${TASK} --preprocessing mne_eeglab_like --montage paper28 \
   --window-sec 1 --stride-sec 1 --filter-scope group_bounded
 
 for MODEL in psd_svm random_forest; do
@@ -112,13 +112,13 @@ ALLOWLIST=data/metadata/eligible_within_task_b.txt
 python scripts/extract_psd_features.py \
   --raw-root data/raw/MPD_DF_EEG_ONLY \
   --output-dir data/derived/psd_${TASK}_1s_paper28 \
-  --task ${TASK} --preprocessing physiological_validation --montage paper28 \
+  --task ${TASK} --preprocessing mne_eeglab_like --montage paper28 \
   --window-sec 1 --stride-sec 1 --filter-scope group_bounded
 
 python scripts/extract_eeg_windows.py \
   --raw-root data/raw/MPD_DF_EEG_ONLY \
   --output-dir data/derived/eeg_${TASK}_1s_paper28 \
-  --task ${TASK} --preprocessing physiological_validation --montage paper28 \
+  --task ${TASK} --preprocessing mne_eeglab_like --montage paper28 \
   --window-sec 1 --stride-sec 1 --filter-scope group_bounded
 
 for MODEL in psd_svm random_forest; do
