@@ -2,7 +2,7 @@ name: rtx4060_eeg_experiment_matrix
 seed: 42
 hardware: NVIDIA_RTX_4060
 main_tasks: [A, B]
-models: [psd_svm, random_forest, eegnet, mscnn_cam]
+models: [psd_svm, random_forest, eegnet]
 window_seconds: [1]
 protocol_order:
   - within_subject_grouped

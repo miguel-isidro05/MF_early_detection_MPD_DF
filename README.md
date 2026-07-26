@@ -73,10 +73,11 @@ python scripts/run_deep.py \
   --device cuda
 ```
 
-`MSCNNCAM` is a local inferred implementation. Its results must not be described
-as an exact reproduction of Table 9 because the public paper and repository omit
-the training code, split, classification preprocessing, metric averaging, channel
-subset, and artifact policy.
+The RTX execution matrix intentionally omits the local inferred `MSCNNCAM` to
+keep the full benchmark tractable. It runs PSD-SVM, Random Forest, and EEGNet.
+The public paper and repository omit the Table 9 training code, split,
+classification preprocessing, metric averaging, channel subset, and artifact
+policy, so no local model is reported as an exact Table 9 reproduction.
 
 See `PREPROCESSING_PROTOCOL.md` for the paper-confirmed visualization profiles,
 the standardized Task A/B benchmark profile, and the limits of Figure 11.

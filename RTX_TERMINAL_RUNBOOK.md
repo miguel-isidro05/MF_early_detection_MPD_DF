@@ -74,7 +74,7 @@ for MODEL in psd_svm random_forest; do
     --project-root . --task ${TASK} --model ${MODEL} --protocol loso --seed 42
 done
 
-for MODEL in eegnet mscnn_cam; do
+for MODEL in eegnet; do
   for PROTOCOL in within_subject loso; do
     EXTRA=()
     if [ "${PROTOCOL}" = "within_subject" ]; then EXTRA=(--subject-allowlist ${ALLOWLIST}); fi
@@ -91,11 +91,9 @@ done
 test -f experiments/within_subject/A_1s_psd_svm/metrics.json
 test -f experiments/within_subject/A_1s_random_forest/metrics.json
 test -f experiments/within_subject/A_1s_eegnet/metrics.json
-test -f experiments/within_subject/A_1s_mscnn_cam/metrics.json
 test -f experiments/loso/A_1s_psd_svm/metrics.json
 test -f experiments/loso/A_1s_random_forest/metrics.json
 test -f experiments/loso/A_1s_eegnet/metrics.json
-test -f experiments/loso/A_1s_mscnn_cam/metrics.json
 
 rm -rf data/derived/psd_A_1s_paper28 data/derived/eeg_A_1s_paper28
 ```
@@ -133,7 +131,7 @@ for MODEL in psd_svm random_forest; do
     --project-root . --task ${TASK} --model ${MODEL} --protocol loso --seed 42
 done
 
-for MODEL in eegnet mscnn_cam; do
+for MODEL in eegnet; do
   for PROTOCOL in within_subject loso; do
     EXTRA=()
     if [ "${PROTOCOL}" = "within_subject" ]; then EXTRA=(--subject-allowlist ${ALLOWLIST}); fi
@@ -150,11 +148,9 @@ done
 test -f experiments/within_subject/B_1s_psd_svm/metrics.json
 test -f experiments/within_subject/B_1s_random_forest/metrics.json
 test -f experiments/within_subject/B_1s_eegnet/metrics.json
-test -f experiments/within_subject/B_1s_mscnn_cam/metrics.json
 test -f experiments/loso/B_1s_psd_svm/metrics.json
 test -f experiments/loso/B_1s_random_forest/metrics.json
 test -f experiments/loso/B_1s_eegnet/metrics.json
-test -f experiments/loso/B_1s_mscnn_cam/metrics.json
 
 rm -rf data/derived/psd_B_1s_paper28 data/derived/eeg_B_1s_paper28
 ```
