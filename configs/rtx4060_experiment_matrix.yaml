@@ -1,14 +1,14 @@
 name: rtx4060_eeg_experiment_matrix
 seed: 42
 hardware: NVIDIA_RTX_4060
-main_tasks: [A, B]
+main_tasks: [A]
 models: [psd_svm, random_forest, eegnet]
 window_seconds: [1]
 protocol_order:
   - within_subject_grouped
   - leave_one_subject_out
 primary_task: A
-reference_task: B
+reference_task: null
 primary_metric: subject_macro_f1
 secondary_metrics:
   - subject_macro_balanced_accuracy

@@ -54,6 +54,7 @@ def parse_args() -> argparse.Namespace:
         choices=("group_bounded", "subject_continuous"),
         default="group_bounded",
     )
+    parser.add_argument("--subjects", nargs="*")
     return parser.parse_args()
 
 
@@ -97,6 +98,14 @@ def main() -> None:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     config = PREPROCESSING[args.preprocessing]
     picks = EDF_CHANNELS if args.montage == "edf32" else PAPER_ANALYTICAL_CHANNELS
+    requested = {value.zfill(2) for value in args.subjects or []}
+    subjects = [
+        files
+        for files in discover_subjects(args.raw_root, include_psg=True)
+        if not requested or files.subject in requested
+    ]
+    if requested != {files.subject for files in subjects}:
+        raise ValueError("One or more requested subjects were not found")
     manifest = {
         "task": args.task,
         "preprocessing": config.to_dict(),
@@ -106,6 +115,7 @@ def main() -> None:
         "stride_sec": args.stride_sec,
         "filter_context_sec": args.filter_context_sec,
         "filter_scope": args.filter_scope,
+        "subjects_requested": sorted(requested),
         "code_hash": code_hash(),
         "subjects": [],
         "subject_fingerprints": {},
@@ -120,11 +130,12 @@ def main() -> None:
             "stride_sec": args.stride_sec,
             "filter_context_sec": args.filter_context_sec,
             "filter_scope": args.filter_scope,
+            "subjects_requested": sorted(requested),
             "code_hash": manifest["code_hash"],
         }
     )
     manifest["config_fingerprint"] = config_fingerprint
-    for files in discover_subjects(args.raw_root, include_psg=True):
+    for files in subjects:
         output = args.output_dir / f"subject_{files.subject}.npz"
         if files.psg is None and files.alignment_manifest is None:
             raise ValueError(
