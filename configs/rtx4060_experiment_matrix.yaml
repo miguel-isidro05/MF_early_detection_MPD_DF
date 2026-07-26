@@ -16,10 +16,11 @@ secondary_metrics:
   - subject_macro_specificity
 artifact_policy: exclude_8_9
 seed_policy: single_global_seed_42
-primary_preprocessing: mne_eeglab_like
+primary_preprocessing: physiological_validation
 primary_preprocessing_status: >-
-  MNE zero-phase FIR approximation of EEGLAB Figure 6 filtering; no global ICA,
-  no resampling, no z-score. ICA is fold-sensitive and is not precomputed.
+  Paper-described EEG visualization order: 1-100 Hz bandpass, 50 Hz notch,
+  mean removal, 200 Hz resampling, then per-window/channel z-score. ICA is
+  Figure 11-specific and is not precomputed for classification.
 deep_defaults:
   epochs: 50
   patience: 8

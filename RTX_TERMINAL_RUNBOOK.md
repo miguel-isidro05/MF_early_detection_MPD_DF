@@ -50,6 +50,7 @@ bash scripts/run_rtx_full_task_a.sh
 
 Expected final line: `FULL_TASK_A_COMPLETE`.
 
-The production preprocessing is `mne_eeglab_like`: MNE zero-phase FIR,
-0.3-35 Hz bandpass, 49-51 Hz notch, native 500 Hz, no z-score and no resampling.
-All scripts use global seed 42.
+The production preprocessing is `physiological_validation`: 1-100 Hz bandpass,
+50 Hz notch, mean removal, 200 Hz resampling, and per-window/channel z-score.
+These are the published EEG visualization operations. ICA remains restricted to
+the Figure 11 PSD-topography reproduction. All scripts use global seed 42.

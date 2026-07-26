@@ -47,11 +47,12 @@ exact agreement with the published map.
 The paper states only that 1-second EEG was preprocessed and fed into MSCNN-CAM
 using parameters from a separate cited study. It omits the classification filter,
 normalization scope, montage, split, and balancing policy. The primary RTX
-benchmark uses `mne_eeglab_like`: MNE zero-phase double-pass FIR filtering at the
-native 500 Hz, a 0.3-35 Hz bandpass, and a 50 Hz notch with 2 Hz width (49-51 Hz).
-It uses per-window demeaning, without resampling or z-score normalization. This
-is the closest portable MNE approximation of the published EEGLAB Figure 6
-filtering; it is not a claim of samplewise equality with `pop_eegfiltnew`.
+benchmark uses `physiological_validation`, the EEG operations explicitly stated
+for Figure 10: 1-100 Hz bandpass, 50 Hz notch, mean removal, downsampling to
+200 Hz, and z-score normalization. The implementation removes the mean after
+filtering and before resampling, matching the stated sequence. Filter design and
+z-score scope are not reported, so numerical samplewise equality with the source
+workflow cannot be claimed.
 
 ICA is not fitted globally during cache creation because that would expose a LOSO
 test subject to the learned representation. The Figure 11 `runica + ICLabel`
@@ -59,9 +60,8 @@ workflow remains a separate descriptive reproduction. Any model ICA ablation mus
 fit MNE ICA on each training fold only and transfer that projection to validation
 and test data.
 
-`physiological_validation` remains available as a declared sensitivity protocol:
-1-100 Hz, 50 Hz notch, per-window demean, 200 Hz resampling, and
-per-window/channel z-score.
+`mne_eeglab_like` remains available for Figure 6/11 sensitivity analysis:
+MNE FIR 0.3-35 Hz with a 49-51 Hz notch at native 500 Hz.
 
 The resulting Task A/B benchmark is valid for comparing local models under the
 same protocol; it is not an exact Table 9 result.

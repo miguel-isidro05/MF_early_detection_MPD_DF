@@ -18,6 +18,8 @@ class PreprocessingConfig:
     target_sfreq: float | None
     notch_band: tuple[float, float] | None = None
     demean: bool = True
+    demean_position: str = "before_filter"
+    filter_order: str = "notch_then_bandpass"
     normalization: str = "none"
     filter_backend: str = "scipy_iir"
 
@@ -42,6 +44,8 @@ PHYSIOLOGICAL_VALIDATION = PreprocessingConfig(
     notch_freq=50.0,
     target_sfreq=200.0,
     demean=True,
+    demean_position="after_filter",
+    filter_order="bandpass_then_notch",
     normalization="per_window_channel_zscore",
 )
 
@@ -81,8 +85,25 @@ def preprocess_batch(
     data = np.asarray(windows, dtype=np.float64)
     if data.ndim != 3:
         raise ValueError("windows must have shape (batch, channels, samples)")
-    if config.demean:
+    if config.demean and config.demean_position == "before_filter":
         data = data - data.mean(axis=-1, keepdims=True)
+    def apply_scipy_bandpass(values: np.ndarray) -> np.ndarray:
+        if config.l_freq is None and config.h_freq is None:
+            return values
+        nyquist = sfreq / 2.0
+        if config.l_freq is None:
+            wn = config.h_freq / nyquist
+            btype = "lowpass"
+        elif config.h_freq is None:
+            wn = config.l_freq / nyquist
+            btype = "highpass"
+        else:
+            wn = [config.l_freq / nyquist, config.h_freq / nyquist]
+            btype = "bandpass"
+        return sosfiltfilt(butter(4, wn, btype=btype, output="sos"), values, axis=-1)
+
+    if config.filter_backend == "scipy_iir" and config.filter_order == "bandpass_then_notch":
+        data = apply_scipy_bandpass(data)
     if config.filter_backend == "mne_fir_zero_double":
         import mne
 
@@ -126,20 +147,16 @@ def preprocess_batch(
     elif config.notch_freq is not None:
         b, a = iirnotch(config.notch_freq, Q=30.0, fs=sfreq)
         data = sosfiltfilt(tf2sos(b, a), data, axis=-1)
-    if config.filter_backend == "scipy_iir" and (
+    if config.filter_backend == "scipy_iir" and config.filter_order == "notch_then_bandpass" and (
         config.l_freq is not None or config.h_freq is not None
     ):
-        nyquist = sfreq / 2.0
-        if config.l_freq is None:
-            wn = config.h_freq / nyquist
-            btype = "lowpass"
-        elif config.h_freq is None:
-            wn = config.l_freq / nyquist
-            btype = "highpass"
-        else:
-            wn = [config.l_freq / nyquist, config.h_freq / nyquist]
-            btype = "bandpass"
-        data = sosfiltfilt(butter(4, wn, btype=btype, output="sos"), data, axis=-1)
+        data = apply_scipy_bandpass(data)
+    if config.demean and config.demean_position == "after_filter":
+        data = data - data.mean(axis=-1, keepdims=True)
+    if config.demean_position not in {"before_filter", "after_filter"}:
+        raise ValueError(f"Unsupported demean position: {config.demean_position}")
+    if config.filter_order not in {"notch_then_bandpass", "bandpass_then_notch"}:
+        raise ValueError(f"Unsupported filter order: {config.filter_order}")
     output_sfreq = float(sfreq)
     if config.target_sfreq is not None and config.target_sfreq != sfreq:
         source = int(round(sfreq))

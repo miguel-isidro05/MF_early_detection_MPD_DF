@@ -24,12 +24,12 @@ python -c "import torch; assert torch.cuda.is_available(); print(torch.cuda.get_
 
 python scripts/extract_psd_features.py \
   --raw-root "${RAW_ROOT}" --output-dir "data/derived/psd_${TASK}_1s_paper28" \
-  --task "${TASK}" --preprocessing mne_eeglab_like --montage paper28 \
+  --task "${TASK}" --preprocessing physiological_validation --montage paper28 \
   --window-sec 1 --stride-sec 1 --filter-scope group_bounded
 
 python scripts/extract_eeg_windows.py \
   --raw-root "${RAW_ROOT}" --output-dir "data/derived/eeg_${TASK}_1s_paper28" \
-  --task "${TASK}" --preprocessing mne_eeglab_like --montage paper28 \
+  --task "${TASK}" --preprocessing physiological_validation --montage paper28 \
   --window-sec 1 --stride-sec 1 --filter-scope group_bounded
 
 for model in psd_svm random_forest; do

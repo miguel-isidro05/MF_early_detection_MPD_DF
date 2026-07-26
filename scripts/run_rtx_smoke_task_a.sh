@@ -16,13 +16,13 @@ python -c "import torch; assert torch.cuda.is_available(); print(torch.cuda.get_
 
 python scripts/extract_psd_features.py \
   --raw-root "${RAW_ROOT}" --output-dir "data/derived/smoke_psd_${TASK}" \
-  --task "${TASK}" --preprocessing mne_eeglab_like --montage paper28 \
+  --task "${TASK}" --preprocessing physiological_validation --montage paper28 \
   --window-sec 1 --stride-sec 1 --filter-scope group_bounded \
   --subjects ${SMOKE_IDS}
 
 python scripts/extract_eeg_windows.py \
   --raw-root "${RAW_ROOT}" --output-dir "data/derived/smoke_eeg_${TASK}" \
-  --task "${TASK}" --preprocessing mne_eeglab_like --montage paper28 \
+  --task "${TASK}" --preprocessing physiological_validation --montage paper28 \
   --window-sec 1 --stride-sec 1 --filter-scope group_bounded \
   --subjects ${SMOKE_IDS}
 
