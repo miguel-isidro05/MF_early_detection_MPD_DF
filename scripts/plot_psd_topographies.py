@@ -27,10 +27,39 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--source-dir", type=Path, required=True)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--ica-kurtosis-threshold", type=float, default=10.0)
+    parser.add_argument("--ica-max-excluded", type=int, default=2)
+    parser.add_argument("--average-reference", action="store_true")
+    parser.add_argument(
+        "--psd-mode",
+        choices=("sum_linear", "mean_linear", "db_of_mean", "mean_db"),
+        default="sum_linear",
+    )
+    parser.add_argument(
+        "--epoch-aggregation",
+        choices=("mean", "median"),
+        default="mean",
+        help="Mean is the paper-facing default; median is an outlier-sensitivity analysis.",
+    )
+    parser.add_argument("--psd-low-hz", type=float, default=0.3)
+    parser.add_argument("--psd-high-hz", type=float, default=35.0)
+    parser.add_argument(
+        "--trim-edge-sec",
+        type=int,
+        default=60,
+        help="Figure 6 policy: remove one minute from each recording end.",
+    )
     return parser.parse_args()
 
 
-def apply_clei_ica(segments: np.ndarray, sfreq: float, ch_names: list[str], seed: int) -> tuple[np.ndarray, dict[str, object]]:
+def apply_clei_ica(
+    segments: np.ndarray,
+    sfreq: float,
+    ch_names: list[str],
+    seed: int,
+    kurtosis_threshold: float,
+    max_excluded: int,
+) -> tuple[np.ndarray, dict[str, object]]:
     """Apply the deterministic FastICA policy validated in the CLEI benchmark.
 
     ICA is fitted on a 1 Hz high-passed copy, then applied to the original
@@ -52,8 +81,10 @@ def apply_clei_ica(segments: np.ndarray, sfreq: float, ch_names: list[str], seed
     sources = ica.get_sources(epochs_fit).get_data()
     flattened = np.transpose(sources, (1, 0, 2)).reshape(sources.shape[1], -1)
     kurtosis = stats.kurtosis(flattened, axis=1, fisher=False, bias=False)
-    candidates = np.where(np.asarray(kurtosis) > 10.0)[0].tolist()
-    excluded = sorted(candidates, key=lambda index: float(kurtosis[index]), reverse=True)[:2]
+    candidates = np.where(np.asarray(kurtosis) > kurtosis_threshold)[0].tolist()
+    excluded = sorted(candidates, key=lambda index: float(kurtosis[index]), reverse=True)[
+        :max_excluded
+    ]
     ica.exclude = [int(index) for index in excluded]
     cleaned = epochs_original.copy()
     ica.apply(cleaned, verbose="ERROR")
@@ -63,8 +94,8 @@ def apply_clei_ica(segments: np.ndarray, sfreq: float, ch_names: list[str], seed
         "method": "fastica",
         "n_components": 0.99,
         "random_state": seed,
-        "kurtosis_threshold": 10.0,
-        "max_removed_components": 2,
+        "kurtosis_threshold": kurtosis_threshold,
+        "max_removed_components": max_excluded,
         "excluded_components": [int(index) for index in excluded],
         "component_kurtosis": [float(value) for value in kurtosis],
     }
@@ -75,6 +106,8 @@ def main() -> None:
     args = parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     args.source_dir.mkdir(parents=True, exist_ok=True)
+    if not 0.0 <= args.psd_low_hz < args.psd_high_hz:
+        raise ValueError("Require 0 <= --psd-low-hz < --psd-high-hz")
     files = next(
         item
         for item in discover_subjects(args.raw_root, include_psg=True)
@@ -89,7 +122,9 @@ def main() -> None:
     segment_rows = []
     context = 10
 
-    for start in range(0, alignment.duration_sec - 30 + 1, 30):
+    first_start = args.trim_edge_sec
+    last_start = alignment.duration_sec - args.trim_edge_sec - 30
+    for start in range(first_start, last_start + 1, 30):
         labels = alignment.labels[start : start + 30]
         if np.unique(labels).size != 1 or int(labels[0]) not in segments_by_label:
             continue
@@ -107,6 +142,8 @@ def main() -> None:
         filtered, output_sfreq = preprocess_batch(values[None, ...], sfreq, config)
         local = int(round((eeg_start - read_start) * output_sfreq))
         segment = filtered[0, :, local : local + int(round(30 * output_sfreq))]
+        if args.average_reference:
+            segment = segment - segment.mean(axis=0, keepdims=True)
         segments_by_label[label].append(segment)
         segment_rows.append(
             {
@@ -122,7 +159,12 @@ def main() -> None:
         [np.stack(segments_by_label[label]) for label in range(5)], axis=0
     )
     cleaned_segments, ica_record = apply_clei_ica(
-        all_segments, output_sfreq, list(EDF_CHANNELS), args.seed
+        all_segments,
+        output_sfreq,
+        list(EDF_CHANNELS),
+        args.seed,
+        args.ica_kurtosis_threshold,
+        args.ica_max_excluded,
     )
     powers = {label: [] for label in range(5)}
     offset = 0
@@ -135,10 +177,20 @@ def main() -> None:
                 nperseg=int(round(2 * output_sfreq)),
                 axis=-1,
             )
-            # The paper's 0-5000 color scale matches summed PSD bins, rather
-            # than a frequency-band integral. Keep the figure's 0.3-35 Hz range.
-            mask = (frequencies >= 0.3) & (frequencies <= 35.0)
-            powers[label].append(psd[:, mask].sum(axis=-1))
+            # Keep the Figure 6 frequency range for the Figure 11 diagnostic.
+            mask = (frequencies >= args.psd_low_hz) & (frequencies <= args.psd_high_hz)
+            selected = psd[:, mask]
+            if args.psd_mode == "sum_linear":
+                power = selected.sum(axis=-1)
+            elif args.psd_mode == "mean_linear":
+                power = selected.mean(axis=-1)
+            elif args.psd_mode == "mean_db":
+                power = (
+                    10.0 * np.log10(np.maximum(selected * 1e12, np.finfo(float).tiny))
+                ).mean(axis=-1)
+            else:
+                power = selected.mean(axis=-1)
+            powers[label].append(power)
         offset += count
 
     averages = {}
@@ -146,7 +198,16 @@ def main() -> None:
     for label, values in powers.items():
         if not values:
             raise ValueError(f"No PSD segments for label {label}")
-        average = np.mean(np.stack(values), axis=0) * 1e12
+        stacked = np.stack(values)
+        average = (
+            np.mean(stacked, axis=0)
+            if args.epoch_aggregation == "mean"
+            else np.median(stacked, axis=0)
+        )
+        if args.psd_mode == "db_of_mean":
+            average = 10.0 * np.log10(np.maximum(average * 1e12, np.finfo(float).tiny))
+        elif args.psd_mode in {"sum_linear", "mean_linear"}:
+            average = average * 1e12
         averages[label] = average
         for channel, power in zip(EDF_CHANNELS, average):
             rows.append(
@@ -176,12 +237,15 @@ def main() -> None:
                     "the deterministic CLEI FastICA policy is transferred for reproducibility."
                 ),
                 "preprocessing": config.to_dict(),
+                "figure6_edge_trim_sec": args.trim_edge_sec,
+                "average_reference": args.average_reference,
                 "ica": ica_record,
                 "psd": (
-                    "Welch, 2-second subwindows, mean PSD then sum of 0.3-35 Hz "
-                    "density bins, converted to uV^2/Hz"
+                    "Welch, 2-second subwindows, "
+                    f"{args.psd_low_hz:g}-{args.psd_high_hz:g} Hz, mode={args.psd_mode}"
                 ),
-                "psd_status": "INFERRED_FROM_FIGURE11_COLOR_SCALE",
+                "epoch_aggregation": args.epoch_aggregation,
+                "psd_status": "dB modes are sensitivity analyses; the published 0-5000 scale is linear.",
                 "segment_policy": "non-overlapping aligned 30-second clean single-label segments",
             },
             indent=2,
@@ -193,7 +257,8 @@ def main() -> None:
     info.set_montage(mne.channels.make_standard_montage("standard_1020"), on_missing="raise")
     positions = np.asarray([channel["loc"][:2] for channel in info["chs"]])
     all_values = np.concatenate(list(averages.values()))
-    vmin, vmax = 0.0, float(all_values.max())
+    vmin = 0.0 if args.psd_mode in {"sum_linear", "mean_linear"} else float(all_values.min())
+    vmax = float(all_values.max())
     figure, axes = plt.subplots(2, 3, figsize=(12, 8), constrained_layout=True)
     image = None
     for label, axis in enumerate(axes.flat[:5]):
@@ -209,8 +274,12 @@ def main() -> None:
         )
         axis.set_title(f"{chr(97 + label)}  {LABEL_NAMES[label]}")
     axes.flat[-1].axis("off")
-    figure.colorbar(image, ax=axes.ravel().tolist(), shrink=0.75, label="Summed PSD bins (µV²/Hz)")
-    figure.suptitle("Participant 10 | 1 Hz FastICA diagnostic | PSD aggregation inferred from Figure 11")
+    unit = "PSD bins (µV²/Hz)" if args.psd_mode == "sum_linear" else "PSD (dB/Hz)" if "db" in args.psd_mode else "Mean PSD (µV²/Hz)"
+    figure.colorbar(image, ax=axes.ravel().tolist(), shrink=0.75, label=unit)
+    figure.suptitle(
+        "Participant 10 | 1 Hz FastICA | "
+        f"PSD={args.psd_mode} | CAR={args.average_reference}"
+    )
     figure.savefig(args.output_dir / "figure11_psd_topographies_ica.png", dpi=300)
     figure.savefig(args.output_dir / "figure11_psd_topographies_ica.pdf")
     plt.close(figure)
