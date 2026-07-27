@@ -4,6 +4,7 @@ from mpd_df.preprocessing import (
     ANNOTATION_VISUALIZATION,
     MNE_EEGLAB_LIKE,
     PHYSIOLOGICAL_VALIDATION,
+    PSD_CLASSIFICATION,
     preprocess_batch,
 )
 
@@ -16,6 +17,15 @@ def test_physiological_pipeline_downsamples_and_normalizes() -> None:
     assert sfreq == 200.0
     assert np.allclose(processed.mean(axis=-1), 0.0, atol=1e-5)
     assert np.allclose(processed.std(axis=-1), 1.0, atol=1e-4)
+
+
+def test_psd_classification_preserves_physical_amplitude() -> None:
+    rng = np.random.default_rng(42)
+    windows = 4.0 * rng.normal(size=(2, 4, 500))
+    processed, sfreq = preprocess_batch(windows, 500.0, PSD_CLASSIFICATION)
+    assert processed.shape == (2, 4, 200)
+    assert sfreq == 200.0
+    assert not np.allclose(processed.std(axis=-1), 1.0, atol=1e-2)
 
 
 def test_annotation_profile_uses_published_49_to_51_hz_bandstop() -> None:

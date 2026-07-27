@@ -1,21 +1,29 @@
-# RTX Terminal Runbook
+# RTX Terminal Runbook: Final Task A
 
-This branch runs only Task A with three models: PSD-SVM, Random Forest, and
-EEGNet. It has two intentionally separate commands: a five-subject smoke run and
-a 50-subject full benchmark.
+This branch executes only Task A (Wakefulness versus Fatigue1). The final
+models are nested PSD-SVM, Random Forest, and EEGNet. MSCNN-CAM and Tasks B/C
+are excluded by study decision. The global seed is 42.
 
-## One-time setup
+## 1. Update and verify
 
-From the project root, after copying `mpd_df_eeg_only_rtx.zip` there:
+Run from the SSH home directory:
 
 ```bash
+cd ~/FatigaMental
+git fetch origin
+git checkout rtx-eeg-pipeline
+git pull --ff-only origin rtx-eeg-pipeline
+
+source ~/miniconda3/etc/profile.d/conda.sh
 conda activate eeg-diffusion
 python -m pip install -e . --no-deps
-export MNE_DONTWRITE_HOME=true MPLCONFIGDIR=/tmp/mpddf_mpl PYTHONUNBUFFERED=1
 
-unzip mpd_df_eeg_only_rtx.zip -d data/raw
-rm mpd_df_eeg_only_rtx.zip
+export MNE_DONTWRITE_HOME=true
+export MPLCONFIGDIR=/tmp/mpddf_mpl
+export PYTHONUNBUFFERED=1
 
+test "$(find data/raw/MPD_DF_EEG_ONLY/EEG -name '*.edf' | wc -l)" -eq 50
+test "$(find data/raw/MPD_DF_EEG_ONLY/Annotation -name '*.txt' | wc -l)" -eq 50
 python -c "import torch; assert torch.cuda.is_available(); print(torch.cuda.get_device_name(0), torch.version.cuda)"
 pytest -p no:cacheprovider tests -q
 python scripts/verify_official_alignment.py \
@@ -23,34 +31,84 @@ python scripts/verify_official_alignment.py \
   --output reproduction/reports/r0_alignment_rtx.json
 ```
 
-The alignment verification must end with `"status": "MATCH"`.
+Continue only if the tests pass and the alignment report ends in `MATCH`.
 
-## Command 1: five-subject smoke test
+## 2. Five-subject final-path smoke
 
-This runs only subjects `01-05`, keeps its six result folders, deletes only its
-temporary caches, and then terminates. Send the contents of
-`experiments/smoke/**/metrics.json` and `device.json` for review before running
-the next command.
+Remove only an earlier incomplete final smoke, then launch:
 
 ```bash
-bash scripts/run_rtx_smoke_task_a.sh
+cd ~/FatigaMental
+rm -rf data/derived/final_task_a_smoke experiments/final_task_a_smoke
+mkdir -p logs
+
+nohup bash scripts/run_final_task_a_smoke.sh \
+  > logs/final_task_a_smoke.log 2>&1 < /dev/null &
+echo "PID: $!"
+tail -f logs/final_task_a_smoke.log
 ```
 
-Expected final line: `SMOKE_TASK_A_COMPLETE`.
+The required last line is:
 
-## Command 2: full 50-subject Task A benchmark
+```text
+FINAL_TASK_A_SMOKE_COMPLETE
+```
 
-Run this only after the smoke run has been reviewed. It refuses to start unless
-the six smoke `metrics.json` files exist. It runs all 50 subjects, retains all
-experiment outputs, deletes only regenerated caches, and then terminates.
+The smoke runs the exact nested code path with one outer fold and shortened
+EEGNet epochs. It is an execution check, not a paper result.
+
+## 3. Full final benchmark
+
+Only after the smoke completes:
 
 ```bash
-bash scripts/run_rtx_full_task_a.sh
+cd ~/FatigaMental
+test "$(tail -n 1 logs/final_task_a_smoke.log)" = "FINAL_TASK_A_SMOKE_COMPLETE"
+rm -rf data/derived/final_task_a
+mkdir -p logs
+
+nohup bash scripts/run_final_task_a.sh \
+  > logs/final_task_a.log 2>&1 < /dev/null &
+echo "PID: $!"
+tail -f logs/final_task_a.log
 ```
 
-Expected final line: `FULL_TASK_A_COMPLETE`.
+The required last line is:
 
-The production preprocessing is `physiological_validation`: 1-100 Hz bandpass,
-50 Hz notch, mean removal, 200 Hz resampling, and per-window/channel z-score.
-These are the published EEG visualization operations. ICA remains restricted to
-the Figure 11 PSD-topography reproduction. All scripts use global seed 42.
+```text
+FINAL_TASK_A_COMPLETE
+```
+
+Do not delete `experiments/final_task_a` or `results/final_task_a`: they contain
+the out-of-fold predictions, fold metrics, nested selections, checkpoints,
+tables, source data, and publication figures. Regenerable EEG/PSD caches are
+deleted stage by stage.
+
+## 4. Package results for review
+
+```bash
+cd ~/FatigaMental
+test "$(tail -n 1 logs/final_task_a.log)" = "FINAL_TASK_A_COMPLETE"
+tar -czf task_a_final_review_bundle.tar.gz \
+  experiments/final_task_a \
+  results/final_task_a \
+  logs/final_task_a.log \
+  reproduction/reports/r0_alignment_rtx.json
+ls -lh task_a_final_review_bundle.tar.gz
+```
+
+Download `~/FatigaMental/task_a_final_review_bundle.tar.gz` for the final
+scientific audit.
+
+## Fixed protocol
+
+- 1-second non-overlapping windows contained inside physician annotation bins.
+- EEG: 1-100 Hz zero-phase bandpass, 50 Hz notch, mean removal, 200 Hz.
+- EEGNet: per-window/per-channel z-score.
+- PSD models: physical-amplitude PSD/log features and training-fold scaler.
+- Within-subject grouped development plus primary unseen-subject LOSO.
+- Hyperparameters and the Fatigue1 threshold are selected only from grouped
+  inner validation.
+- Primary montage `edf32`; LOSO channel ablation `paper28`.
+- ICA is excluded from classification and retained only for the manual
+  topographic reproduction.

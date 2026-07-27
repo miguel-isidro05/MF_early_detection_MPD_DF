@@ -47,6 +47,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--learning-rate", type=float, default=1e-3)
     parser.add_argument("--weight-decay", type=float, default=1e-4)
+    parser.add_argument("--eegnet-f1", type=int, default=8)
+    parser.add_argument("--eegnet-depth-multiplier", type=int, default=2)
+    parser.add_argument("--eegnet-f2", type=int, default=16)
+    parser.add_argument("--eegnet-temporal-kernel", type=int, default=64)
+    parser.add_argument("--eegnet-dropout", type=float, default=0.5)
     parser.add_argument("--device", default="auto")
     parser.add_argument("--num-workers", type=int, default=0)
     parser.add_argument("--max-folds", type=int)
@@ -55,9 +60,18 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def make_model(name: str, n_channels: int, n_times: int):
+def make_model(args: argparse.Namespace, n_channels: int, n_times: int):
+    name = args.model
     if name == "eegnet":
-        return EEGNet(n_channels=n_channels, n_times=n_times)
+        return EEGNet(
+            n_channels=n_channels,
+            n_times=n_times,
+            f1=args.eegnet_f1,
+            depth_multiplier=args.eegnet_depth_multiplier,
+            f2=args.eegnet_f2,
+            temporal_kernel=args.eegnet_temporal_kernel,
+            dropout=args.eegnet_dropout,
+        )
     return MSCNNCAM(n_channels=n_channels)
 
 
@@ -159,7 +173,7 @@ def main() -> None:
                 "n_test": len(test),
             }
         )
-        model = make_model(args.model, n_channels, n_times).to(device)
+        model = make_model(args, n_channels, n_times).to(device)
         criterion = torch.nn.CrossEntropyLoss(class_weights(y, train, device))
         optimizer = torch.optim.AdamW(
             model.parameters(),

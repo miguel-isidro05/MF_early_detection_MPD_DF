@@ -49,6 +49,18 @@ PHYSIOLOGICAL_VALIDATION = PreprocessingConfig(
     normalization="per_window_channel_zscore",
 )
 
+PSD_CLASSIFICATION = PreprocessingConfig(
+    name="psd_classification",
+    l_freq=1.0,
+    h_freq=100.0,
+    notch_freq=50.0,
+    target_sfreq=200.0,
+    demean=True,
+    demean_position="after_filter",
+    filter_order="bandpass_then_notch",
+    normalization="none",
+)
+
 ANNOTATION_VISUALIZATION = PreprocessingConfig(
     name="annotation_visualization",
     l_freq=0.3,

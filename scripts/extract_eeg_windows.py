@@ -24,6 +24,7 @@ from mpd_df.preprocessing import (
     ANNOTATION_VISUALIZATION,
     MNE_EEGLAB_LIKE,
     PHYSIOLOGICAL_VALIDATION,
+    PSD_CLASSIFICATION,
     REFERENCE_UNSPECIFIED,
 )
 
@@ -32,6 +33,7 @@ PREPROCESSING = {
     for config in (
         REFERENCE_UNSPECIFIED,
         PHYSIOLOGICAL_VALIDATION,
+        PSD_CLASSIFICATION,
         ANNOTATION_VISUALIZATION,
         MNE_EEGLAB_LIKE,
     )
@@ -126,7 +128,12 @@ def main() -> None:
     ).hexdigest()
     manifest["config_fingerprint"] = fingerprint
 
-    for files in subjects:
+    for subject_index, files in enumerate(subjects, start=1):
+        print(
+            f"[EEG cache] subject {files.subject} "
+            f"({subject_index}/{len(subjects)})",
+            flush=True,
+        )
         data_path = args.output_dir / f"subject_{files.subject}_X.npy"
         metadata_path = args.output_dir / f"subject_{files.subject}_metadata.csv"
         if (data_path.exists() or metadata_path.exists()) and not args.overwrite:
@@ -192,6 +199,7 @@ def main() -> None:
             }
         )
     (args.output_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    print(f"[EEG cache] complete: {args.output_dir}", flush=True)
 
 
 if __name__ == "__main__":

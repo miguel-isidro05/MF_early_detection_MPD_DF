@@ -23,6 +23,7 @@ from mpd_df.preprocessing import (
     ANNOTATION_VISUALIZATION,
     MNE_EEGLAB_LIKE,
     PHYSIOLOGICAL_VALIDATION,
+    PSD_CLASSIFICATION,
     REFERENCE_UNSPECIFIED,
 )
 
@@ -31,6 +32,7 @@ PREPROCESSING = {
     for config in (
         REFERENCE_UNSPECIFIED,
         PHYSIOLOGICAL_VALIDATION,
+        PSD_CLASSIFICATION,
         ANNOTATION_VISUALIZATION,
         MNE_EEGLAB_LIKE,
     )
@@ -135,7 +137,12 @@ def main() -> None:
         }
     )
     manifest["config_fingerprint"] = config_fingerprint
-    for files in subjects:
+    for subject_index, files in enumerate(subjects, start=1):
+        print(
+            f"[PSD cache] subject {files.subject} "
+            f"({subject_index}/{len(subjects)})",
+            flush=True,
+        )
         output = args.output_dir / f"subject_{files.subject}.npz"
         if files.psg is None and files.alignment_manifest is None:
             raise ValueError(
@@ -209,6 +216,7 @@ def main() -> None:
         manifest["subjects"].append(files.subject)
         manifest["subject_fingerprints"][files.subject] = cache_fingerprint
     (args.output_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    print(f"[PSD cache] complete: {args.output_dir}", flush=True)
 
 
 if __name__ == "__main__":

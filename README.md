@@ -73,8 +73,20 @@ python scripts/run_deep.py \
   --device cuda
 ```
 
-The RTX execution matrix intentionally omits the local inferred `MSCNNCAM` to
-keep the full benchmark tractable. It runs PSD-SVM, Random Forest, and EEGNet.
+The final RTX protocol intentionally omits the local inferred `MSCNNCAM` and
+Tasks B/C. It runs nested PSD-SVM, Random Forest, and EEGNet for Task A only,
+with within-subject grouped development, primary LOSO evaluation, and an
+`edf32` versus `paper28` channel ablation. Run the short final-path smoke before
+the full benchmark:
+
+```bash
+bash scripts/run_final_task_a_smoke.sh
+bash scripts/run_final_task_a.sh
+```
+
+The full command creates `experiments/final_task_a` with out-of-fold
+predictions, selections, and EEGNet checkpoints, then creates
+`results/final_task_a` with publication tables and figures.
 The public paper and repository omit the Table 9 training code, split,
 classification preprocessing, metric averaging, channel subset, and artifact
 policy, so no local model is reported as an exact Table 9 reproduction.

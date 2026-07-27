@@ -1,0 +1,33 @@
+name: task_a_final_protocol
+seed: 42
+task: A
+scope: EEG-only, Task A only; MSCNN-CAM excluded by study decision.
+primary_montage: edf32
+channel_ablation_montage: paper28
+window_sec: 1
+stride_sec: 1
+artifact_policy: exclude_signal_abnormality_and_severe_artifacts
+within_subject:
+  outer_split: StratifiedGroupKFold
+  outer_folds: 5
+  group: fixed_30_second_annotation_bin
+  filter_scope: group_bounded
+loso:
+  outer_split: LeaveOneGroupOut_by_subject
+  inner_split: StratifiedGroupKFold_by_subject
+  inner_folds: 5
+  filter_scope: subject_continuous
+preprocessing:
+  fixed_signal_operations: [bandpass_1_100_hz, notch_50_hz, demean, resample_200_hz]
+  eegnet_normalization: per_window_channel_zscore
+  psd_normalization: none_before_psd
+  psd_scaling: train_fold_standard_scaler
+  ica: excluded_from_primary_classification
+selection:
+  primary_metric: fatigue_class_f1
+  tie_breakers: [fatigue_class_recall, cohens_kappa, balanced_accuracy]
+  threshold_selection: inner_validation_only
+models:
+  - psd_svm
+  - random_forest
+  - eegnet
