@@ -68,5 +68,9 @@ for path in \
   test -f "${path}"
 done
 
+python scripts/assemble_task_a_results.py \
+  --experiments-root experiments \
+  --output-dir results/task_a_final
+
 rm -rf data/derived/psd_A_1s_paper28 data/derived/eeg_A_1s_paper28
 echo "FULL_TASK_A_COMPLETE"
