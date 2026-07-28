@@ -34,12 +34,14 @@ def bandpower_features(
     matrices: list[np.ndarray] = []
     names: list[str] = []
     absolute: dict[str, np.ndarray] = {}
+    power_floor = np.finfo(np.float64).tiny
     for band, (low, high) in bands.items():
         mask = (frequencies >= low) & (frequencies < high)
         power = np.trapezoid(psd[..., mask], frequencies[mask], axis=-1)
         absolute[band] = power
-        matrices.extend([power, power / total])
-        for prefix in ("abs", "rel"):
+        power_db = 10.0 * np.log10(np.maximum(power, power_floor))
+        matrices.extend([power_db, power / total])
+        for prefix in ("abs_db", "rel"):
             names.extend(f"{channel}_{prefix}_{band}" for channel in channel_names)
 
     denominator = np.maximum(absolute["beta"], np.finfo(float).eps)
@@ -49,8 +51,8 @@ def bandpower_features(
         "theta_alpha_beta": (absolute["theta"] + absolute["alpha"]) / denominator,
     }
     for ratio_name, values in ratios.items():
-        matrices.append(values)
-        names.extend(f"{channel}_{ratio_name}" for channel in channel_names)
+        matrices.append(10.0 * np.log10(np.maximum(values, power_floor)))
+        names.extend(f"{channel}_{ratio_name}_db" for channel in channel_names)
 
     normalized_psd = psd[..., positive] / np.maximum(
         psd[..., positive].sum(axis=-1, keepdims=True),
@@ -62,4 +64,3 @@ def bandpower_features(
     names.extend(f"{channel}_spectral_entropy" for channel in channel_names)
 
     return np.concatenate(matrices, axis=1).astype(np.float32), names
-

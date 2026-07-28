@@ -28,8 +28,9 @@ not silently used as the PSD classification representation.
 
 For EEGNet, normalize each window and channel with its own z-score. This has
 no fitted statistic from the held-out participant. For PSD features, retain
-the filtered physical-amplitude signal, compute log band-power features, and
-fit the feature scaler on the training fold only. ICA is not part of the
+the filtered physical-amplitude signal, express absolute band powers and power
+ratios as `10*log10` values, and fit the feature scaler on the training fold
+only. ICA is not part of the
 primary classifier; the manual EEGLAB/PSD reproduction remains separate.
 
 Within-subject filtering is group-bounded so a zero-phase filter cannot mix
@@ -50,6 +51,8 @@ Use LOSO. Each outer test participant remains untouched. On the remaining
 participants, tune the model and decision threshold by a five-fold
 participant-grouped inner validation. Refit the selected candidate on the
 entire outer-training set and evaluate once on the held-out participant.
+For EEGNet, the refit epoch count is the one-based epoch attaining the minimum
+validation loss, not the length of the early-stopping history.
 
 The selection order is fatigue-class F1, then fatigue recall, Cohen's kappa,
 and balanced accuracy. Accuracy is descriptive only.
@@ -61,7 +64,7 @@ score-chasing sweep.
 
 | Model | Inner candidates |
 |---|---|
-| PSD-SVM | Linear SVM, `C` in {0.1, 1, 10}, balanced class weight |
+| PSD-SVM | Linear SVM, `C` in {0.1, 1, 10}, balanced class weight, `max_iter=20000`; non-convergence aborts the run |
 | Random Forest | 500 trees; max depth in {12, none}; min samples leaf in {1, 5}; balanced subsample class weight |
 | EEGNet | `F1` in {8, 16}; dropout in {0.25, 0.50}; learning rate in {3e-4, 1e-3}; AdamW, weight decay 1e-4, early stopping on inner validation |
 
@@ -86,6 +89,6 @@ comparisons.
 Figures: framework diagram; label distribution; existing signal/waveform and
 representative-channel reproductions; manual PSD topography; within-subject
 versus LOSO comparison; normalized and count confusion matrices; per-subject
-F1/recall; calibration curves; EEGNet learning curves; representation and
+F1/recall; RF/EEGNet probability-reliability curves; EEGNet learning curves; representation and
 channel-ablation plots; and exploratory t-SNE of the training-fold-scaled PSD
 features. t-SNE is explicitly exploratory.

@@ -90,15 +90,61 @@ deleted stage by stage.
 cd ~/FatigaMental
 test "$(tail -n 1 logs/final_task_a.log)" = "FINAL_TASK_A_COMPLETE"
 tar -czf task_a_final_review_bundle.tar.gz \
+  --exclude='*/checkpoints' \
+  --exclude='*.partial-*' \
   experiments/final_task_a \
   results/final_task_a \
   logs/final_task_a.log \
-  reproduction/reports/r0_alignment_rtx.json
+  reproduction/reports/r0_alignment_rtx.json \
+  audits/TASK_A_WITHIN_AUDIT_8179bdf.md \
+  FINAL_TASK_A_PROTOCOL.md \
+  configs/final/task_a_final.yaml \
+  data/metadata/eligible_within_task_a.txt \
+  data/metadata/excluded_within_task_a.csv
 ls -lh task_a_final_review_bundle.tar.gz
 ```
 
 Download `~/FatigaMental/task_a_final_review_bundle.tar.gz` for the final
 scientific audit.
+
+## Repair and resume after the audited stopped run
+
+The first stopped run exposed non-converged SVM fits, non-logarithmic PSD
+features, and an EEGNet refit budget based on the early-stopping history length
+instead of the best validation epoch. Archive all preliminary within-subject
+results, regenerate the features, repeat all three models, and then resume LOSO:
+
+```bash
+git pull --ff-only origin rtx-eeg-pipeline
+nohup bash scripts/repair_and_resume_final_task_a.sh \
+  > logs/final_task_a_repair_resume.log 2>&1 < /dev/null &
+echo "PID: $!"
+tail -f logs/final_task_a_repair_resume.log
+```
+
+The repair command keeps all preliminary within-subject results under
+`experiments/final_task_a/audit_superseded_8179bdf` and requires the complete
+existing EEG LOSO cache.
+
+When it finishes, package the corrected run without the large model
+checkpoints:
+
+```bash
+test "$(tail -n 1 logs/final_task_a_repair_resume.log)" = "FINAL_TASK_A_COMPLETE"
+tar -czf task_a_final_corrected_review_bundle.tar.gz \
+  --exclude='*/checkpoints' \
+  --exclude='*.partial-*' \
+  experiments/final_task_a \
+  results/final_task_a \
+  logs/final_task_a_repair_resume.log \
+  reproduction/reports/r0_alignment_rtx.json \
+  audits/TASK_A_WITHIN_AUDIT_8179bdf.md \
+  FINAL_TASK_A_PROTOCOL.md \
+  configs/final/task_a_final.yaml \
+  data/metadata/eligible_within_task_a.txt \
+  data/metadata/excluded_within_task_a.csv
+ls -lh task_a_final_corrected_review_bundle.tar.gz
+```
 
 ## Fixed protocol
 

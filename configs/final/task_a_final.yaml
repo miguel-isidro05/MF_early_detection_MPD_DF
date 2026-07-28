@@ -21,12 +21,19 @@ preprocessing:
   fixed_signal_operations: [bandpass_1_100_hz, notch_50_hz, demean, resample_200_hz]
   eegnet_normalization: per_window_channel_zscore
   psd_normalization: none_before_psd
+  psd_absolute_power: 10_log10_power_db
+  psd_power_ratios: 10_log10_ratio_db
   psd_scaling: train_fold_standard_scaler
   ica: excluded_from_primary_classification
 selection:
   primary_metric: fatigue_class_f1
   tie_breakers: [fatigue_class_recall, cohens_kappa, balanced_accuracy]
   threshold_selection: inner_validation_only
+  eegnet_refit_epochs: best_inner_validation_epoch
+svm_solver:
+  max_iter: 20000
+  tolerance: 0.0001
+  convergence_warning: fail_run
 models:
   - psd_svm
   - random_forest

@@ -31,7 +31,7 @@ from mpd_df.experiment import (
 )
 from mpd_df.metrics import binary_metrics
 from mpd_df.models import EEGNet
-from mpd_df.nested import select_threshold
+from mpd_df.nested import best_epoch_count, select_threshold
 from mpd_df.reproducibility import set_global_seed
 from mpd_df.splits import loso_splits, within_subject_splits
 
@@ -55,15 +55,15 @@ def parse_args() -> argparse.Namespace:
 
 def candidates() -> list[dict[str, float | int]]:
     return [
-        {"f1": 8, "dropout": 0.25, "learning_rate": 1e-3},
-        {"f1": 8, "dropout": 0.50, "learning_rate": 3e-4},
-        {"f1": 16, "dropout": 0.25, "learning_rate": 3e-4},
-        {"f1": 16, "dropout": 0.50, "learning_rate": 1e-3},
+        {"eegnet_f1": 8, "dropout": 0.25, "learning_rate": 1e-3},
+        {"eegnet_f1": 8, "dropout": 0.50, "learning_rate": 3e-4},
+        {"eegnet_f1": 16, "dropout": 0.25, "learning_rate": 3e-4},
+        {"eegnet_f1": 16, "dropout": 0.50, "learning_rate": 1e-3},
     ]
 
 
 def model_for(params: dict[str, float | int], channels: int, times: int) -> EEGNet:
-    f1 = int(params["f1"])
+    f1 = int(params["eegnet_f1"])
     return EEGNet(
         n_channels=channels,
         n_times=times,
@@ -232,16 +232,24 @@ def main() -> None:
             dataset, metadata, y, train, validation, selected, device,
             channels, times, args, args.epochs,
         )
+        selected_epochs = best_epoch_count(history)
         # Refit once on outer training for the selected epoch budget.
         test_truth, test_scores, _, final_state = fit_fixed(
             dataset, metadata, y, outer_train, test, selected, device,
-            channels, times, args, len(history), early_stop=False,
+            channels, times, args, selected_epochs, early_stop=False,
             evaluate_each_epoch=False,
         )
         torch.save(final_state, partial / "checkpoints" / f"fold_{fold:03d}.pt")
         predicted = (test_scores >= threshold).astype(np.int8)
         metrics = binary_metrics(test_truth, predicted); matrix = metrics.pop("confusion_matrix")
-        fold_rows.append({"fold": fold, **selected, "threshold": threshold, **metrics, "confusion_matrix": json.dumps(matrix)})
+        fold_rows.append({
+            "fold": fold,
+            **selected,
+            "selected_epochs": selected_epochs,
+            "threshold": threshold,
+            **metrics,
+            "confusion_matrix": json.dumps(matrix),
+        })
         rows = metadata.iloc[test].drop(columns="_dataset_index").copy()
         rows["fold"] = fold; rows["y_true"] = test_truth; rows["y_pred"] = predicted; rows["score"] = test_scores
         predictions.append(rows)

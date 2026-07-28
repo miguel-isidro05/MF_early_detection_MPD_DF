@@ -10,6 +10,19 @@ from sklearn.model_selection import StratifiedGroupKFold
 from .metrics import binary_metrics
 
 
+def best_epoch_count(history: list[dict[str, float]]) -> int:
+    """Return the one-based epoch count with minimum finite validation loss."""
+    losses = np.asarray(
+        [row.get("validation_loss", np.nan) for row in history],
+        dtype=float,
+    )
+    finite = np.isfinite(losses)
+    if not finite.any():
+        raise ValueError("No finite validation loss is available")
+    finite_indices = np.flatnonzero(finite)
+    return int(finite_indices[np.argmin(losses[finite])] + 1)
+
+
 def threshold_candidates(scores: np.ndarray) -> np.ndarray:
     """Return stable score cutoffs without using outer-test labels."""
     unique = np.unique(np.asarray(scores, dtype=float))

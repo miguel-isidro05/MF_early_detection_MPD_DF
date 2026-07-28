@@ -6,9 +6,11 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import warnings
 
 import numpy as np
 import pandas as pd
+from sklearn.exceptions import ConvergenceWarning
 import yaml
 
 from mpd_df.experiment import ExperimentContext, finalize_experiment, initialize_experiment, save_experiment_results
@@ -25,13 +27,24 @@ def candidate_grid(model: str) -> list[dict[str, object]]:
             for depth in (12, None) for leaf in (1, 5)]
 
 
-def estimator(model: str, params: dict[str, object], seed: int):
+def estimator(
+    model: str,
+    params: dict[str, object],
+    seed: int,
+    svm_solver: dict[str, object],
+):
     if model == "psd_svm":
-        return make_psd_svm(seed=seed, c=float(params["c"]))
+        return make_psd_svm(
+            seed=seed,
+            c=float(params["c"]),
+            max_iter=int(svm_solver["max_iter"]),
+            tol=float(svm_solver["tolerance"]),
+        )
     return make_random_forest(seed=seed, max_depth=params["max_depth"], min_samples_leaf=int(params["min_samples_leaf"]))
 
 
 def main() -> None:
+    warnings.filterwarnings("error", category=ConvergenceWarning)
     parser = argparse.ArgumentParser()
     parser.add_argument("--raw-root", type=Path, required=True)
     parser.add_argument("--config", type=Path, required=True)
@@ -47,6 +60,12 @@ def main() -> None:
     config = yaml.safe_load(args.config.read_text())
     if config.get("task") != "A" or config.get("models") != ["psd_svm", "random_forest", "eegnet"]:
         raise ValueError("Final executor accepts only the declared Task A protocol")
+    svm_solver = config.get("svm_solver", {})
+    required_solver_keys = {"max_iter", "tolerance", "convergence_warning"}
+    if set(svm_solver) != required_solver_keys:
+        raise ValueError("svm_solver config must define the complete solver policy")
+    if svm_solver["convergence_warning"] != "fail_run":
+        raise ValueError("Final protocol requires convergence_warning=fail_run")
     from run_classical import load_features
     X, y, metadata, _ = load_features(args.feature_dir, "A")
     if args.subject_allowlist:
@@ -80,8 +99,16 @@ def main() -> None:
                         else metadata.iloc[train].group_id.to_numpy())
         selected, threshold, inner = nested_classical_selection(
             X[train], y[train], inner_groups, candidate_grid(args.model),
-            lambda params: estimator(args.model, params, 42 + fold), 42 + fold)
-        model = estimator(args.model, selected, 42 + fold); model.fit(X[train], y[train])
+            lambda params: estimator(
+                args.model,
+                params,
+                42 + fold,
+                svm_solver,
+            ),
+            42 + fold,
+        )
+        model = estimator(args.model, selected, 42 + fold, svm_solver)
+        model.fit(X[train], y[train])
         score = model.decision_function(X[test]) if hasattr(model, "decision_function") else model.predict_proba(X[test])[:, 1]
         pred = (score >= threshold).astype(np.int8); metric = binary_metrics(y[test], pred); matrix = metric.pop("confusion_matrix")
         folds.append({

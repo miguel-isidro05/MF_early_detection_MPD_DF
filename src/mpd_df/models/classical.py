@@ -14,6 +14,8 @@ def make_psd_svm(
     seed: int = GLOBAL_SEED,
     c: float = 1.0,
     class_weight: str | dict[int, float] | None = "balanced",
+    max_iter: int = 20_000,
+    tol: float = 1e-4,
 ) -> Pipeline:
     return Pipeline(
         [
@@ -25,6 +27,8 @@ def make_psd_svm(
                     class_weight=class_weight,
                     random_state=seed,
                     dual="auto",
+                    max_iter=max_iter,
+                    tol=tol,
                 ),
             ),
         ]

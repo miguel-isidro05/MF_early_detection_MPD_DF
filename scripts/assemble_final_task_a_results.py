@@ -16,13 +16,14 @@ import shutil
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.special import expit
 from scipy.stats import wilcoxon
 from sklearn.calibration import calibration_curve
 from sklearn.metrics import (
     auc,
     average_precision_score,
+    brier_score_loss,
     precision_recall_curve,
+    roc_auc_score,
     roc_curve,
 )
 
@@ -30,6 +31,19 @@ from sklearn.metrics import (
 EXPERIMENTS = (("within_subject", "psd_svm"), ("within_subject", "random_forest"),
                ("within_subject", "eegnet"), ("loso", "psd_svm"),
                ("loso", "random_forest"), ("loso", "eegnet"))
+
+
+def eegnet_width(row: pd.Series) -> int:
+    if "eegnet_f1" in row.index and pd.notna(row["eegnet_f1"]):
+        return int(row["eegnet_f1"])
+    key = (round(float(row["dropout"]), 2), round(float(row["learning_rate"]), 4))
+    legacy_mapping = {
+        (0.25, 0.001): 8,
+        (0.50, 0.0003): 8,
+        (0.25, 0.0003): 16,
+        (0.50, 0.001): 16,
+    }
+    return legacy_mapping[key]
 
 
 def args() -> argparse.Namespace:
@@ -47,6 +61,21 @@ def save_figure(figure: plt.Figure, directory: Path, stem: str) -> None:
     plt.close(figure)
 
 
+def bootstrap_mean_ci(
+    values: np.ndarray,
+    seed: int,
+    repetitions: int = 10_000,
+) -> tuple[float, float]:
+    """Participant bootstrap confidence interval for a subject-level mean."""
+    clean = np.asarray(values, dtype=float)
+    clean = clean[np.isfinite(clean)]
+    if clean.size < 2:
+        return np.nan, np.nan
+    rng = np.random.default_rng(seed)
+    samples = rng.choice(clean, size=(repetitions, clean.size), replace=True)
+    return tuple(np.quantile(samples.mean(axis=1), [0.025, 0.975]))
+
+
 def main() -> None:
     parsed = args()
     if parsed.output_dir.exists():
@@ -58,14 +87,31 @@ def main() -> None:
     reference_figures = parsed.output_dir / "reference_figures"
     reference_figures.mkdir()
     summary, subjects, predictions, fold_metrics = [], [], [], []
-    for protocol, model in EXPERIMENTS:
+    for experiment_index, (protocol, model) in enumerate(EXPERIMENTS):
         root = parsed.experiments_root / protocol / model
         metrics = json.loads((root / "metrics.json").read_text())
         macro = metrics["macro_subject"]
-        summary.append({"protocol": protocol, "model": model,
-                        **{f"{key}_mean": macro[key]["mean"] for key in ("accuracy", "balanced_accuracy", "precision", "recall", "f1", "kappa")},
-                        **{f"{key}_std": macro[key]["std"] for key in ("accuracy", "balanced_accuracy", "precision", "recall", "f1", "kappa")}})
         frame = pd.read_csv(root / "subject_metrics.csv")
+        summary_row = {
+            "protocol": protocol,
+            "model": model,
+            **{
+                f"{key}_mean": macro[key]["mean"]
+                for key in ("accuracy", "balanced_accuracy", "precision", "recall", "f1", "kappa")
+            },
+            **{
+                f"{key}_std": macro[key]["std"]
+                for key in ("accuracy", "balanced_accuracy", "precision", "recall", "f1", "kappa")
+            },
+        }
+        for metric_name in ("balanced_accuracy", "f1"):
+            low, high = bootstrap_mean_ci(
+                frame[metric_name].to_numpy(),
+                seed=42 + experiment_index,
+            )
+            summary_row[f"{metric_name}_ci95_low"] = low
+            summary_row[f"{metric_name}_ci95_high"] = high
+        summary.append(summary_row)
         frame.insert(0, "model", model); frame.insert(0, "protocol", protocol)
         subjects.append(frame)
         frame = pd.read_csv(root / "predictions.csv")
@@ -77,7 +123,7 @@ def main() -> None:
             frame["selected_params"] = frame.apply(
                 lambda row: json.dumps({
                     "dropout": row["dropout"],
-                    "f1": int(row["f1"]),
+                    "eegnet_f1": eegnet_width(row),
                     "learning_rate": row["learning_rate"],
                 }, sort_keys=True),
                 axis=1,
@@ -85,8 +131,42 @@ def main() -> None:
         fold_metrics.append(frame)
     summary = pd.DataFrame(summary); subjects = pd.concat(subjects, ignore_index=True); predictions = pd.concat(predictions, ignore_index=True)
     fold_metrics = pd.concat(fold_metrics, ignore_index=True)
+    subject_discrimination_rows = []
+    for (protocol, model, subject), group in predictions.groupby(
+        ["protocol", "model", "subject"],
+        sort=False,
+    ):
+        if group.y_true.nunique() < 2:
+            continue
+        subject_discrimination_rows.append({
+            "protocol": protocol,
+            "model": model,
+            "subject": subject,
+            "roc_auc": roc_auc_score(group.y_true, group.score),
+            "average_precision": average_precision_score(group.y_true, group.score),
+        })
+    subject_discrimination = pd.DataFrame(subject_discrimination_rows)
+    discrimination_macro = (
+        subject_discrimination.groupby(["protocol", "model"])[
+            ["roc_auc", "average_precision"]
+        ]
+        .agg(["mean", "std"])
+    )
+    discrimination_macro.columns = [
+        f"{metric}_subject_macro_{statistic}"
+        for metric, statistic in discrimination_macro.columns
+    ]
+    summary = summary.merge(
+        discrimination_macro.reset_index(),
+        on=["protocol", "model"],
+        how="left",
+    )
     summary.to_csv(tables / "model_summary.csv", index=False)
     subjects.to_csv(tables / "subject_metrics.csv", index=False)
+    subject_discrimination.to_csv(
+        tables / "subject_level_discrimination.csv",
+        index=False,
+    )
     predictions.to_csv(tables / "out_of_fold_predictions.csv", index=False)
     fold_metrics.to_csv(tables / "fold_metrics_and_selection.csv", index=False)
     selection_frequency = (
@@ -237,16 +317,24 @@ def main() -> None:
     save_figure(fig_roc, figures, "roc_curves_out_of_fold")
     save_figure(fig_pr, figures, "precision_recall_curves_out_of_fold")
 
-    fig, axes = plt.subplots(1, 3, figsize=(11, 3.5), constrained_layout=True)
-    for axis, model in zip(axes, ("psd_svm", "random_forest", "eegnet")):
+    reliability_rows = []
+    fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), constrained_layout=True)
+    for axis, model in zip(axes, ("random_forest", "eegnet")):
         group = predictions[(predictions.protocol == "loso") & (predictions.model == model)]
         probability = group.score.to_numpy()
-        if model == "psd_svm":
-            probability = expit(probability)
         observed, predicted = calibration_curve(group.y_true, probability, n_bins=10, strategy="quantile")
+        reliability_rows.append({
+            "protocol": "loso",
+            "model": model,
+            "brier_score_micro_window": brier_score_loss(group.y_true, probability),
+        })
         axis.plot([0, 1], [0, 1], "--", color="gray"); axis.plot(predicted, observed, marker="o")
-        axis.set(xlim=(0, 1), ylim=(0, 1), xlabel="Predicted score", ylabel="Observed Fatigue1", title=model)
-    save_figure(fig, figures, "loso_calibration_curves")
+        axis.set(xlim=(0, 1), ylim=(0, 1), xlabel="Predicted probability", ylabel="Observed Fatigue1", title=model)
+    pd.DataFrame(reliability_rows).to_csv(
+        tables / "loso_probability_reliability.csv",
+        index=False,
+    )
+    save_figure(fig, figures, "loso_probability_reliability")
 
     fig, ax = plt.subplots(figsize=(10, 3.8), constrained_layout=True)
     ax.axis("off")
@@ -319,7 +407,7 @@ def main() -> None:
         "confusion_matrices_normalized_and_counts.png": "Out-of-fold confusion matrices with row-normalized rates and counts.",
         "roc_curves_out_of_fold.png": "Window-level out-of-fold ROC curves; subject-macro metrics remain primary.",
         "precision_recall_curves_out_of_fold.png": "Window-level out-of-fold precision-recall curves.",
-        "loso_calibration_curves.png": "LOSO score reliability diagnostics.",
+        "loso_probability_reliability.png": "Descriptive LOSO probability reliability for RF and EEGNet; SVM decision scores are excluded because they are not calibrated probabilities.",
         "representation_ablation.png": "PSD versus raw-window representation comparison.",
         "channel_ablation.png": "EDF32 versus paper28 montage comparison.",
         "hyperparameter_selection_frequency.png": "Frequency of nested hyperparameter choices across outer folds.",
@@ -336,6 +424,23 @@ def main() -> None:
         "out-of-fold predictions. Subject-macro metrics are primary; pooled "
         "window ROC/PR curves are descriptive. The t-SNE plot is exploratory.\n"
     )
+    audit = parsed.output_dir / "audit"
+    audit.mkdir()
+    for source in (
+        Path("FINAL_TASK_A_PROTOCOL.md"),
+        Path("configs/final/task_a_final.yaml"),
+        Path("data/metadata/eligible_within_task_a.txt"),
+        Path("data/metadata/excluded_within_task_a.csv"),
+        Path("data/metadata/alignment_manifest.csv"),
+    ):
+        if source.exists():
+            shutil.copy2(source, audit / source.name)
+    cache_manifests = parsed.experiments_root / "cache_manifests"
+    if cache_manifests.exists():
+        destination = audit / "cache_manifests"
+        destination.mkdir()
+        for source in cache_manifests.glob("*.json"):
+            shutil.copy2(source, destination / source.name)
 
 
 if __name__ == "__main__":

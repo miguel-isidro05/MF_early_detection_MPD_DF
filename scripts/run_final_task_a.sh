@@ -11,11 +11,13 @@ CACHE_ROOT=data/derived/final_task_a
 EXPERIMENT_ROOT=experiments/final_task_a
 RESULT_ROOT=results/final_task_a
 ALLOWLIST=data/metadata/eligible_within_task_a.txt
+MANIFEST_ROOT="${EXPERIMENT_ROOT}/cache_manifests"
 
 test -d "${RAW_ROOT}"
 test ! -e "${EXPERIMENT_ROOT}"
 test ! -e "${RESULT_ROOT}"
 python -c "import torch; assert torch.cuda.is_available(); print(torch.cuda.get_device_name(0))"
+mkdir -p "${MANIFEST_ROOT}"
 
 # Stage 1: personalized development on full 32-channel montage.
 echo "[Stage 1/4] within-subject edf32"
@@ -27,6 +29,10 @@ python scripts/extract_eeg_windows.py \
   --raw-root "${RAW_ROOT}" --output-dir "${CACHE_ROOT}/eeg_edf32_within" \
   --task A --preprocessing physiological_validation --montage edf32 \
   --window-sec 1 --stride-sec 1 --filter-scope group_bounded
+cp "${CACHE_ROOT}/psd_edf32_within/manifest.json" \
+  "${MANIFEST_ROOT}/psd_edf32_within.json"
+cp "${CACHE_ROOT}/eeg_edf32_within/manifest.json" \
+  "${MANIFEST_ROOT}/eeg_edf32_within.json"
 for model in psd_svm random_forest; do
   python scripts/run_nested_task_a.py \
     --raw-root "${RAW_ROOT}" --config configs/final/task_a_final.yaml \
@@ -50,6 +56,10 @@ python scripts/extract_eeg_windows.py \
   --raw-root "${RAW_ROOT}" --output-dir "${CACHE_ROOT}/eeg_edf32_loso" \
   --task A --preprocessing physiological_validation --montage edf32 \
   --window-sec 1 --stride-sec 1 --filter-scope subject_continuous
+cp "${CACHE_ROOT}/psd_edf32_loso/manifest.json" \
+  "${MANIFEST_ROOT}/psd_edf32_loso.json"
+cp "${CACHE_ROOT}/eeg_edf32_loso/manifest.json" \
+  "${MANIFEST_ROOT}/eeg_edf32_loso.json"
 for model in psd_svm random_forest; do
   python scripts/run_nested_task_a.py \
     --raw-root "${RAW_ROOT}" --config configs/final/task_a_final.yaml \
@@ -72,6 +82,10 @@ python scripts/extract_eeg_windows.py \
   --raw-root "${RAW_ROOT}" --output-dir "${CACHE_ROOT}/eeg_paper28_loso" \
   --task A --preprocessing physiological_validation --montage paper28 \
   --window-sec 1 --stride-sec 1 --filter-scope subject_continuous
+cp "${CACHE_ROOT}/psd_paper28_loso/manifest.json" \
+  "${MANIFEST_ROOT}/psd_paper28_loso.json"
+cp "${CACHE_ROOT}/eeg_paper28_loso/manifest.json" \
+  "${MANIFEST_ROOT}/eeg_paper28_loso.json"
 python scripts/run_nested_task_a.py \
   --raw-root "${RAW_ROOT}" --config configs/final/task_a_final.yaml \
   --feature-dir "${CACHE_ROOT}/psd_paper28_loso" \

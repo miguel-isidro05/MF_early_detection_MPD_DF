@@ -1,6 +1,6 @@
 import torch
 
-from mpd_df.models import EEGNet, MSCNNCAM
+from mpd_df.models import EEGNet, MSCNNCAM, make_psd_svm
 
 
 def test_deep_models_emit_binary_logits() -> None:
@@ -10,3 +10,8 @@ def test_deep_models_emit_binary_logits() -> None:
     assert eegnet(inputs).shape == (3, 2)
     assert mscnn(inputs).shape == (3, 2)
 
+
+def test_psd_svm_uses_extended_iteration_budget() -> None:
+    model = make_psd_svm()
+    assert model.named_steps["model"].max_iter == 20_000
+    assert model.named_steps["model"].tol == 1e-4
