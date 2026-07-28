@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create the complete publication-facing Task A result bundle.
+"""Create a complete publication-facing binary-task result bundle.
 
 The script consumes experiment folders; it never retrains or recomputes a
 metric from in-sample predictions. All plots are derived from saved out-of-fold
@@ -27,6 +27,8 @@ from sklearn.metrics import (
     roc_curve,
 )
 
+from mpd_df.metrics import binary_metrics
+
 
 EXPERIMENTS = (("within_subject", "psd_svm"), ("within_subject", "random_forest"),
                ("within_subject", "eegnet"), ("loso", "psd_svm"),
@@ -48,8 +50,10 @@ def eegnet_width(row: pd.Series) -> int:
 
 def args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--experiments-root", type=Path, default=Path("experiments/final_task_a"))
+    parser.add_argument("--experiments-root", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--task", choices=("A", "B"), required=True)
+    parser.add_argument("--protocol-config", type=Path, required=True)
     parser.add_argument("--channel-ablation-root", type=Path)
     parser.add_argument("--reference-figures-dir", type=Path, default=Path("reproduction/figures"))
     return parser.parse_args()
@@ -76,8 +80,88 @@ def bootstrap_mean_ci(
     return tuple(np.quantile(samples.mean(axis=1), [0.025, 0.975]))
 
 
+def context_aggregation_metrics(
+    predictions: pd.DataFrame,
+    contexts: tuple[int, ...] = (1, 5, 10, 30),
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Aggregate adjacent out-of-fold decisions without crossing labels/groups."""
+
+    subject_rows = []
+    source_rows = []
+    for (protocol, model), experiment in predictions.groupby(
+        ["protocol", "model"],
+        sort=False,
+    ):
+        for context in contexts:
+            local = experiment.copy()
+            group_start = local.groupby(
+                ["subject", "group_id"]
+            ).window_start_sec.transform("min")
+            local["context_bin"] = (
+                (local.window_start_sec - group_start) // context
+            ).astype(int)
+            aggregated = (
+                local.groupby(
+                    ["subject", "group_id", "context_bin"],
+                    as_index=False,
+                )
+                .agg(
+                    target_fraction=("y_true", "mean"),
+                    score=("score", "mean"),
+                    vote=("y_pred", "mean"),
+                    n_windows=("y_pred", "size"),
+                )
+            )
+            aggregated["y_true"] = (
+                aggregated.target_fraction >= 0.5
+            ).astype(np.int8)
+            aggregated["y_pred"] = (aggregated.vote >= 0.5).astype(np.int8)
+            aggregated["protocol"] = protocol
+            aggregated["model"] = model
+            aggregated["context_sec"] = context
+            source_rows.append(aggregated)
+            for subject, rows in aggregated.groupby("subject"):
+                metrics = binary_metrics(
+                    rows.y_true.to_numpy(),
+                    rows.y_pred.to_numpy(),
+                )
+                subject_rows.append(
+                    {
+                        "protocol": protocol,
+                        "model": model,
+                        "context_sec": context,
+                        "subject": subject,
+                        **{
+                            key: metrics[key]
+                            for key in (
+                                "balanced_accuracy",
+                                "precision",
+                                "recall",
+                                "f1",
+                                "kappa",
+                            )
+                        },
+                    }
+                )
+    return pd.DataFrame(subject_rows), pd.concat(source_rows, ignore_index=True)
+
+
 def main() -> None:
     parsed = args()
+    protocol_config = yaml.safe_load(parsed.protocol_config.read_text())
+    if protocol_config.get("task") != parsed.task:
+        raise ValueError(
+            "Protocol config task does not match the requested result bundle"
+        )
+    task_slug = f"task_{parsed.task.lower()}"
+    positive_label = (
+        "Fatigue1" if parsed.task == "A" else "Fatigue1 + Fatigue2"
+    )
+    positive_definition = (
+        "Fatigue1 (1)"
+        if parsed.task == "A"
+        else "Fatigue1 (1) + Fatigue2 (2)"
+    )
     if parsed.output_dir.exists():
         raise FileExistsError(parsed.output_dir)
     tables = parsed.output_dir / "tables"
@@ -89,6 +173,12 @@ def main() -> None:
     summary, subjects, predictions, fold_metrics = [], [], [], []
     for experiment_index, (protocol, model) in enumerate(EXPERIMENTS):
         root = parsed.experiments_root / protocol / model
+        environment = json.loads((root / "environment.txt").read_text())
+        experiment_config = yaml.safe_load((root / "config.yaml").read_text())
+        if environment["context"]["task"] != parsed.task:
+            raise ValueError(f"{root} contains a different task")
+        if experiment_config.get("task") != parsed.task:
+            raise ValueError(f"{root}/config.yaml contains a different task")
         metrics = json.loads((root / "metrics.json").read_text())
         macro = metrics["macro_subject"]
         frame = pd.read_csv(root / "subject_metrics.csv")
@@ -169,13 +259,45 @@ def main() -> None:
     )
     predictions.to_csv(tables / "out_of_fold_predictions.csv", index=False)
     fold_metrics.to_csv(tables / "fold_metrics_and_selection.csv", index=False)
+    context_metrics, context_source = context_aggregation_metrics(predictions)
+    context_metrics.to_csv(
+        tables / "temporal_context_subject_metrics.csv",
+        index=False,
+    )
+    context_source.to_csv(
+        tables / "temporal_context_aggregated_predictions.csv",
+        index=False,
+    )
+    context_summary = (
+        context_metrics.groupby(["protocol", "model", "context_sec"])[
+            ["balanced_accuracy", "f1", "recall"]
+        ]
+        .agg(["mean", "std"])
+        .reset_index()
+    )
+    context_summary.columns = [
+        "_".join(str(value) for value in column if str(value))
+        if isinstance(column, tuple)
+        else str(column)
+        for column in context_summary.columns
+    ]
+    context_summary.to_csv(
+        tables / "temporal_context_summary.csv",
+        index=False,
+    )
     selection_frequency = (
         fold_metrics.groupby(["protocol", "model", "selected_params"], dropna=False)
         .size().rename("selected_folds").reset_index()
     )
     selection_frequency.to_csv(tables / "selected_hyperparameter_frequency.csv", index=False)
     pd.DataFrame([
-        {"component": "task", "value": "Task A: Wakefulness (0) versus Fatigue1 (1)"},
+        {
+            "component": "task",
+            "value": (
+                f"Task {parsed.task}: Wakefulness (0) versus "
+                f"{positive_definition}"
+            ),
+        },
         {"component": "window", "value": "1 second, 1-second stride, annotation-bin bounded"},
         {"component": "bandpass", "value": "1-100 Hz, zero phase"},
         {"component": "notch", "value": "50 Hz, zero phase"},
@@ -224,12 +346,12 @@ def main() -> None:
     canonical = predictions[
         (predictions.protocol == "loso") & (predictions.model == "psd_svm")
     ]
-    task_a_counts = (
+    task_counts = (
         canonical.groupby(["subject", "y_true"]).size().rename("windows").reset_index()
     )
-    task_a_counts.to_csv(tables / "task_a_label_distribution.csv", index=False)
+    task_counts.to_csv(tables / f"{task_slug}_label_distribution.csv", index=False)
     count_pivot = (
-        task_a_counts.pivot(index="subject", columns="y_true", values="windows")
+        task_counts.pivot(index="subject", columns="y_true", values="windows")
         .reindex(columns=[0, 1], fill_value=0)
         .fillna(0)
     )
@@ -238,23 +360,44 @@ def main() -> None:
     wake = count_pivot[0].to_numpy()
     fatigue = count_pivot[1].to_numpy()
     ax.bar(x_subject, wake, label="Wakefulness", color="#277da1")
-    ax.bar(x_subject, fatigue, bottom=wake, label="Fatigue1", color="#f94144")
+    ax.bar(
+        x_subject,
+        fatigue,
+        bottom=wake,
+        label=positive_label,
+        color="#f94144",
+    )
     ax.set(
         xticks=x_subject,
         xticklabels=count_pivot.index.astype(str),
         xlabel="Participant",
         ylabel="Eligible 1-second windows",
-        title="Task A label distribution after exclusions",
+        title=f"Task {parsed.task} label distribution after exclusions",
     )
     ax.tick_params(axis="x", rotation=90, labelsize=7)
     ax.legend()
-    save_figure(fig, figures, "task_a_label_distribution")
+    save_figure(fig, figures, f"{task_slug}_label_distribution")
 
     labels = [f"{p.replace('_', ' ')}\n{m.replace('_', ' ').upper()}" for p, m in summary[["protocol", "model"]].itertuples(index=False)]
     x = np.arange(len(summary)); fig, ax = plt.subplots(figsize=(12, 5), constrained_layout=True)
-    ax.bar(x - .18, summary.f1_mean, .36, yerr=summary.f1_std, label="Fatigue1 F1", capsize=3)
+    ax.bar(
+        x - .18,
+        summary.f1_mean,
+        .36,
+        yerr=summary.f1_std,
+        label=f"{positive_label} F1",
+        capsize=3,
+    )
     ax.bar(x + .18, summary.balanced_accuracy_mean, .36, yerr=summary.balanced_accuracy_std, label="Balanced accuracy", capsize=3)
-    ax.set(xticks=x, xticklabels=labels, ylim=(0, 1), ylabel="Subject-macro score", title="Task A: personalized and unseen-subject performance")
+    ax.set(
+        xticks=x,
+        xticklabels=labels,
+        ylim=(0, 1),
+        ylabel="Subject-macro score",
+        title=(
+            f"Task {parsed.task}: personalized and unseen-subject performance"
+        ),
+    )
     ax.legend(); ax.grid(axis="y", alpha=.25)
     save_figure(fig, figures, "protocol_comparison")
 
@@ -275,7 +418,7 @@ def main() -> None:
         for row in range(2):
             for column in range(2):
                 axis.text(column, row, f"{normalized[row, column]:.2f}\n(n={matrix[row, column]})", ha="center", va="center")
-        axis.set(xticks=[0, 1], yticks=[0, 1], xticklabels=["Wake", "Fatigue1"], yticklabels=["Wake", "Fatigue1"],
+        axis.set(xticks=[0, 1], yticks=[0, 1], xticklabels=["Wake", positive_label], yticklabels=["Wake", positive_label],
                  xlabel="Predicted", ylabel="True", title=f"{protocol}: {model}")
     save_figure(fig, figures, "confusion_matrices_normalized_and_counts")
 
@@ -329,7 +472,7 @@ def main() -> None:
             "brier_score_micro_window": brier_score_loss(group.y_true, probability),
         })
         axis.plot([0, 1], [0, 1], "--", color="gray"); axis.plot(predicted, observed, marker="o")
-        axis.set(xlim=(0, 1), ylim=(0, 1), xlabel="Predicted probability", ylabel="Observed Fatigue1", title=model)
+        axis.set(xlim=(0, 1), ylim=(0, 1), xlabel="Predicted probability", ylabel=f"Observed {positive_label}", title=model)
     pd.DataFrame(reliability_rows).to_csv(
         tables / "loso_probability_reliability.csv",
         index=False,
@@ -338,7 +481,7 @@ def main() -> None:
 
     fig, ax = plt.subplots(figsize=(10, 3.8), constrained_layout=True)
     ax.axis("off")
-    labels_flow = ["MPD-DF EEG", "Audit + alignment", "Standard preprocessing", "Task A windows",
+    labels_flow = ["MPD-DF EEG", "Audit + alignment", "Standard preprocessing", f"Task {parsed.task} windows",
                    "Nested development", "LOSO test", "Subject-level inference"]
     for index, label in enumerate(labels_flow):
         x0 = .02 + index * .14
@@ -346,7 +489,7 @@ def main() -> None:
                 bbox={"boxstyle": "round,pad=.35", "facecolor": "#e8f0f7", "edgecolor": "#345"})
         if index < len(labels_flow) - 1:
             ax.annotate("", xy=(x0 + .115, .5), xytext=(x0 + .065, .5), arrowprops={"arrowstyle": "->"})
-    save_figure(fig, figures, "task_a_framework")
+    save_figure(fig, figures, f"{task_slug}_framework")
 
     representation = summary[summary.model.isin(["psd_svm", "eegnet"])].copy()
     fig, ax = plt.subplots(figsize=(7, 4), constrained_layout=True)
@@ -354,6 +497,27 @@ def main() -> None:
         ax.plot(group.protocol, group.f1_mean, marker="o", label=model)
     ax.set(ylim=(0, 1), ylabel="Subject-macro F1", title="Representation ablation"); ax.legend(); ax.grid(alpha=.25)
     save_figure(fig, figures, "representation_ablation")
+
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4), constrained_layout=True)
+    for axis, protocol in zip(axes, ("within_subject", "loso")):
+        local = context_summary[context_summary.protocol == protocol]
+        for model, group in local.groupby("model"):
+            axis.plot(
+                group.context_sec,
+                group.f1_mean,
+                marker="o",
+                label=model,
+            )
+        axis.set(
+            xticks=[1, 5, 10, 30],
+            ylim=(0, 1),
+            xlabel="Decision aggregation context (s)",
+            ylabel="Subject-macro F1",
+            title=protocol.replace("_", " "),
+        )
+        axis.grid(alpha=0.2)
+    axes[0].legend()
+    save_figure(fig, figures, "temporal_context_aggregation")
 
     fig, axes = plt.subplots(2, 3, figsize=(13, 7), constrained_layout=True)
     for axis, ((protocol, model), group) in zip(
@@ -400,8 +564,12 @@ def main() -> None:
         save_figure(fig, figures, "eegnet_learning_curves_loso")
 
     captions = {
-        "task_a_framework.png": "Leakage-controlled Task A experimental framework.",
-        "task_a_label_distribution.png": "Eligible Wakefulness and Fatigue1 windows by participant.",
+        f"{task_slug}_framework.png": (
+            f"Leakage-controlled Task {parsed.task} experimental framework."
+        ),
+        f"{task_slug}_label_distribution.png": (
+            f"Eligible Wakefulness and {positive_label} windows by participant."
+        ),
         "protocol_comparison.png": "Subject-macro F1 and balanced accuracy by protocol and model.",
         "subject_level_f1_recall.png": "Per-subject out-of-fold F1 and recall.",
         "confusion_matrices_normalized_and_counts.png": "Out-of-fold confusion matrices with row-normalized rates and counts.",
@@ -411,6 +579,11 @@ def main() -> None:
         "representation_ablation.png": "PSD versus raw-window representation comparison.",
         "channel_ablation.png": "EDF32 versus paper28 montage comparison.",
         "hyperparameter_selection_frequency.png": "Frequency of nested hyperparameter choices across outer folds.",
+        "temporal_context_aggregation.png": (
+            "Descriptive aggregation of adjacent out-of-fold decisions at "
+            "1, 5, 10, and 30 seconds in fixed clock bins that do not cross "
+            "30-second evaluation groups."
+        ),
         "eegnet_learning_curves_loso.png": "EEGNet inner-validation learning curves under LOSO.",
         "tsne_psd_exploratory.png": "Exploratory t-SNE of PSD features; not used for inferential claims.",
     }
@@ -419,7 +592,7 @@ def main() -> None:
         for name, caption in captions.items()
     ]).to_csv(tables / "figure_manifest.csv", index=False)
     (parsed.output_dir / "README.md").write_text(
-        "# Final Task A Results\n\n"
+        f"# Final Task {parsed.task} Results\n\n"
         "All predictive metrics and model plots are generated from saved "
         "out-of-fold predictions. Subject-macro metrics are primary; pooled "
         "window ROC/PR curves are descriptive. The t-SNE plot is exploratory.\n"
@@ -427,10 +600,14 @@ def main() -> None:
     audit = parsed.output_dir / "audit"
     audit.mkdir()
     for source in (
-        Path("FINAL_TASK_A_PROTOCOL.md"),
-        Path("configs/final/task_a_final.yaml"),
-        Path("data/metadata/eligible_within_task_a.txt"),
-        Path("data/metadata/excluded_within_task_a.csv"),
+        Path(
+            "FINAL_TASK_A_PROTOCOL.md"
+            if parsed.task == "A"
+            else "FINAL_TASK_B_PROTOCOL.md"
+        ),
+        parsed.protocol_config,
+        Path(f"data/metadata/eligible_within_task_{parsed.task.lower()}.txt"),
+        Path(f"data/metadata/excluded_within_task_{parsed.task.lower()}.csv"),
         Path("data/metadata/alignment_manifest.csv"),
     ):
         if source.exists():

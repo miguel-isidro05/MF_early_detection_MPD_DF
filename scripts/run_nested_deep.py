@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Nested EEGNet evaluation for final Task A."""
+"""Nested EEGNet evaluation for final binary EEG tasks."""
 
 from __future__ import annotations
 
@@ -41,6 +41,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cache-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--protocol", choices=("within_subject", "loso"), required=True)
+    parser.add_argument("--task", choices=("A", "B"), required=True)
     parser.add_argument("--subject-allowlist", type=Path)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--batch-size", type=int, default=128)
@@ -162,8 +163,8 @@ def main() -> None:
     args = parse_args()
     set_global_seed(args.seed)
     cache = WindowCache.load(args.cache_dir)
-    if cache.manifest["task"] != "A":
-        raise ValueError("Final deep runner accepts Task A only")
+    if cache.manifest["task"] != args.task:
+        raise ValueError("Deep cache task does not match --task")
     dataset = CachedWindowDataset(cache)
     metadata = cache.metadata.copy()
     metadata["_dataset_index"] = np.arange(len(metadata))
@@ -177,7 +178,13 @@ def main() -> None:
     resolved = {key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()}
     partial = initialize_experiment(
         args.output_dir,
-        ExperimentContext(args.output_dir.name, "A", "eegnet", args.protocol, args.seed),
+        ExperimentContext(
+            args.output_dir.name,
+            args.task,
+            "eegnet",
+            args.protocol,
+            args.seed,
+        ),
         resolved,
         " ".join(shlex.quote(v) for v in sys.argv),
         Path("."),
@@ -276,7 +283,9 @@ def main() -> None:
     }, indent=2) + "\n")
     for filename in ("subjects_train.txt", "subjects_validation.txt", "subjects_test.txt"):
         (partial / filename).write_text("See split_assignments.csv\n")
-    (partial / "README.md").write_text("# Final nested EEGNet Task A\n")
+    (partial / "README.md").write_text(
+        f"# Final nested EEGNet Task {args.task}\n"
+    )
     finalize_experiment(partial, args.output_dir)
     print(f"[{args.protocol}/eegnet] complete: {args.output_dir}", flush=True)
 

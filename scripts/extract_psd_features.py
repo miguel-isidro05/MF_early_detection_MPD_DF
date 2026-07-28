@@ -20,8 +20,13 @@ from mpd_df.dataset import (
 )
 from mpd_df.features import bandpower_features
 from mpd_df.preprocessing import (
+    ANNOTATION_CLASSIFICATION,
+    ANNOTATION_GLOBAL_ZSCORE,
+    ANNOTATION_MICROVOLT,
     ANNOTATION_VISUALIZATION,
     MNE_EEGLAB_LIKE,
+    PHYSIOLOGICAL_GLOBAL_ZSCORE,
+    PHYSIOLOGICAL_MICROVOLT,
     PHYSIOLOGICAL_VALIDATION,
     PSD_CLASSIFICATION,
     REFERENCE_UNSPECIFIED,
@@ -32,7 +37,12 @@ PREPROCESSING = {
     for config in (
         REFERENCE_UNSPECIFIED,
         PHYSIOLOGICAL_VALIDATION,
+        PHYSIOLOGICAL_GLOBAL_ZSCORE,
+        PHYSIOLOGICAL_MICROVOLT,
         PSD_CLASSIFICATION,
+        ANNOTATION_CLASSIFICATION,
+        ANNOTATION_GLOBAL_ZSCORE,
+        ANNOTATION_MICROVOLT,
         ANNOTATION_VISUALIZATION,
         MNE_EEGLAB_LIKE,
     )
@@ -57,6 +67,7 @@ def parse_args() -> argparse.Namespace:
         default="group_bounded",
     )
     parser.add_argument("--subjects", nargs="*")
+    parser.add_argument("--transition-guard-sec", type=int, default=0)
     return parser.parse_args()
 
 
@@ -97,6 +108,8 @@ def code_hash() -> str:
 
 def main() -> None:
     args = parse_args()
+    if args.filter_context_sec < 0:
+        raise ValueError("filter_context_sec must be non-negative")
     args.output_dir.mkdir(parents=True, exist_ok=True)
     config = PREPROCESSING[args.preprocessing]
     picks = EDF_CHANNELS if args.montage == "edf32" else PAPER_ANALYTICAL_CHANNELS
@@ -117,6 +130,7 @@ def main() -> None:
         "stride_sec": args.stride_sec,
         "filter_context_sec": args.filter_context_sec,
         "filter_scope": args.filter_scope,
+        "transition_guard_sec": args.transition_guard_sec,
         "subjects_requested": sorted(requested),
         "code_hash": code_hash(),
         "subjects": [],
@@ -132,6 +146,7 @@ def main() -> None:
             "stride_sec": args.stride_sec,
             "filter_context_sec": args.filter_context_sec,
             "filter_scope": args.filter_scope,
+            "transition_guard_sec": args.transition_guard_sec,
             "subjects_requested": sorted(requested),
             "code_hash": manifest["code_hash"],
         }
@@ -178,6 +193,12 @@ def main() -> None:
             window_sec=args.window_sec,
             stride_sec=args.stride_sec,
         )
+        if args.transition_guard_sec < 0:
+            raise ValueError("transition_guard_sec must be non-negative")
+        if args.transition_guard_sec:
+            index = index.loc[
+                index["distance_to_transition_sec"] >= args.transition_guard_sec
+            ].reset_index(drop=True)
         keep, y = map_binary_task(index["label"].to_numpy(), args.task)
         index = index.loc[keep].reset_index(drop=True)
         feature_batches = []
@@ -205,10 +226,14 @@ def main() -> None:
             output,
             X=X,
             y=y,
+            label=index["label"].to_numpy(dtype=np.int8),
             subject=index["subject"].astype(str).to_numpy(dtype="U"),
             window_start_sec=index["window_start_sec"].to_numpy(),
             block_id=index["block_id"].to_numpy(),
             group_id=index["group_id"].astype(str).to_numpy(dtype="U"),
+            distance_to_transition_sec=index[
+                "distance_to_transition_sec"
+            ].to_numpy(dtype=np.float32),
             feature_names=np.asarray(feature_names or [], dtype="U"),
             cache_fingerprint=np.asarray(cache_fingerprint),
             config_fingerprint=np.asarray(config_fingerprint),

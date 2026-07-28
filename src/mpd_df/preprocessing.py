@@ -49,6 +49,30 @@ PHYSIOLOGICAL_VALIDATION = PreprocessingConfig(
     normalization="per_window_channel_zscore",
 )
 
+PHYSIOLOGICAL_GLOBAL_ZSCORE = PreprocessingConfig(
+    name="physiological_global_zscore",
+    l_freq=1.0,
+    h_freq=100.0,
+    notch_freq=50.0,
+    target_sfreq=200.0,
+    demean=True,
+    demean_position="after_filter",
+    filter_order="bandpass_then_notch",
+    normalization="per_window_global_zscore",
+)
+
+PHYSIOLOGICAL_MICROVOLT = PreprocessingConfig(
+    name="physiological_microvolt",
+    l_freq=1.0,
+    h_freq=100.0,
+    notch_freq=50.0,
+    target_sfreq=200.0,
+    demean=True,
+    demean_position="after_filter",
+    filter_order="bandpass_then_notch",
+    normalization="microvolt_scale",
+)
+
 PSD_CLASSIFICATION = PreprocessingConfig(
     name="psd_classification",
     l_freq=1.0,
@@ -59,6 +83,45 @@ PSD_CLASSIFICATION = PreprocessingConfig(
     demean_position="after_filter",
     filter_order="bandpass_then_notch",
     normalization="none",
+)
+
+ANNOTATION_CLASSIFICATION = PreprocessingConfig(
+    name="annotation_classification",
+    l_freq=0.3,
+    h_freq=35.0,
+    notch_freq=None,
+    target_sfreq=200.0,
+    notch_band=(49.0, 51.0),
+    demean=True,
+    demean_position="before_filter",
+    filter_order="notch_then_bandpass",
+    normalization="none",
+)
+
+ANNOTATION_GLOBAL_ZSCORE = PreprocessingConfig(
+    name="annotation_global_zscore",
+    l_freq=0.3,
+    h_freq=35.0,
+    notch_freq=None,
+    target_sfreq=200.0,
+    notch_band=(49.0, 51.0),
+    demean=True,
+    demean_position="before_filter",
+    filter_order="notch_then_bandpass",
+    normalization="per_window_global_zscore",
+)
+
+ANNOTATION_MICROVOLT = PreprocessingConfig(
+    name="annotation_microvolt",
+    l_freq=0.3,
+    h_freq=35.0,
+    notch_freq=None,
+    target_sfreq=200.0,
+    notch_band=(49.0, 51.0),
+    demean=True,
+    demean_position="before_filter",
+    filter_order="notch_then_bandpass",
+    normalization="microvolt_scale",
 )
 
 ANNOTATION_VISUALIZATION = PreprocessingConfig(
@@ -182,6 +245,12 @@ def preprocess_batch(
         mean = data.mean(axis=-1, keepdims=True)
         std = data.std(axis=-1, keepdims=True)
         data = (data - mean) / np.maximum(std, np.finfo(data.dtype).eps)
+    elif config.normalization == "per_window_global_zscore":
+        mean = data.mean(axis=(-2, -1), keepdims=True)
+        std = data.std(axis=(-2, -1), keepdims=True)
+        data = (data - mean) / np.maximum(std, np.finfo(data.dtype).eps)
+    elif config.normalization == "microvolt_scale":
+        data = data * 1e6
     elif config.normalization != "none":
         raise ValueError(f"Unsupported normalization: {config.normalization}")
     return data.astype(np.float32), output_sfreq

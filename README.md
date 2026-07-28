@@ -73,26 +73,29 @@ python scripts/run_deep.py \
   --device cuda
 ```
 
-The final RTX protocol intentionally omits the local inferred `MSCNNCAM` and
-Tasks B/C. It runs nested PSD-SVM, Random Forest, and EEGNet for Task A only,
-with within-subject grouped development, primary LOSO evaluation, and an
-`edf32` versus `paper28` channel ablation. Run the short final-path smoke before
-the full benchmark:
+The original final RTX protocol runs Task A only. A second, explicitly
+documented protocol now evaluates Task B: Wakefulness versus
+Fatigue1+Fatigue2. Task C and the local inferred `MSCNNCAM` remain excluded.
+Task B starts with a five-subject preprocessing screen:
 
 ```bash
-bash scripts/run_final_task_a_smoke.sh
-bash scripts/run_final_task_a.sh
+bash scripts/run_task_b_hypothesis_smoke.sh
+# Review results/task_b_hypothesis_smoke before the full run.
+bash scripts/run_final_task_b.sh
 ```
 
-The full command creates `experiments/final_task_a` with out-of-fold
-predictions, selections, and EEGNet checkpoints, then creates
-`results/final_task_a` with publication tables and figures.
+The full Task B command creates `experiments/final_task_b` with out-of-fold
+predictions, selections, and EEGNet checkpoints. Its publication bundle is
+written to `results/final_task_b`. The bundle includes paired theta/alpha/beta
+physiology, effect-size topographies, regional progression plots, and their
+source tables.
 The public paper and repository omit the Table 9 training code, split,
 classification preprocessing, metric averaging, channel subset, and artifact
 policy, so no local model is reported as an exact Table 9 reproduction.
 
 See `PREPROCESSING_PROTOCOL.md` for the paper-confirmed visualization profiles,
-the standardized Task A/B benchmark profile, and the limits of Figure 11.
+the standardized Task A/B benchmark profile, and the limits of Figure 11. See
+`RTX_TASK_B_RUNBOOK.md` for the exact RTX commands.
 
 ## RTX transfer
 

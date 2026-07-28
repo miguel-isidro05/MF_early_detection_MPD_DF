@@ -21,8 +21,13 @@ from mpd_df.dataset import (
     iter_preprocessed_windows,
 )
 from mpd_df.preprocessing import (
+    ANNOTATION_CLASSIFICATION,
+    ANNOTATION_GLOBAL_ZSCORE,
+    ANNOTATION_MICROVOLT,
     ANNOTATION_VISUALIZATION,
     MNE_EEGLAB_LIKE,
+    PHYSIOLOGICAL_GLOBAL_ZSCORE,
+    PHYSIOLOGICAL_MICROVOLT,
     PHYSIOLOGICAL_VALIDATION,
     PSD_CLASSIFICATION,
     REFERENCE_UNSPECIFIED,
@@ -33,7 +38,12 @@ PREPROCESSING = {
     for config in (
         REFERENCE_UNSPECIFIED,
         PHYSIOLOGICAL_VALIDATION,
+        PHYSIOLOGICAL_GLOBAL_ZSCORE,
+        PHYSIOLOGICAL_MICROVOLT,
         PSD_CLASSIFICATION,
+        ANNOTATION_CLASSIFICATION,
+        ANNOTATION_GLOBAL_ZSCORE,
+        ANNOTATION_MICROVOLT,
         ANNOTATION_VISUALIZATION,
         MNE_EEGLAB_LIKE,
     )
@@ -77,6 +87,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--filter-scope", choices=("group_bounded", "subject_continuous"))
     parser.add_argument("--subjects", nargs="*")
     parser.add_argument("--max-windows-per-class", type=int)
+    parser.add_argument("--transition-guard-sec", type=int, default=0)
+    parser.add_argument("--filter-context-sec", type=int, default=10)
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
 
@@ -100,6 +112,8 @@ def choose_balanced_subset(index, task: str, maximum: int | None):
 
 def main() -> None:
     args = parse_args()
+    if args.filter_context_sec < 0:
+        raise ValueError("filter_context_sec must be non-negative")
     args.output_dir.mkdir(parents=True, exist_ok=True)
     picks = EDF_CHANNELS if args.montage == "edf32" else PAPER_ANALYTICAL_CHANNELS
     config = PREPROCESSING[args.preprocessing]
@@ -120,6 +134,8 @@ def main() -> None:
         "window_sec": args.window_sec,
         "stride_sec": args.stride_sec,
         "filter_scope": filter_scope,
+        "transition_guard_sec": args.transition_guard_sec,
+        "filter_context_sec": args.filter_context_sec,
         "subjects": [],
         "code_hash": code_hash(),
     }
@@ -145,6 +161,12 @@ def main() -> None:
             window_sec=args.window_sec,
             stride_sec=args.stride_sec,
         )
+        if args.transition_guard_sec < 0:
+            raise ValueError("transition_guard_sec must be non-negative")
+        if args.transition_guard_sec:
+            index = index.loc[
+                index["distance_to_transition_sec"] >= args.transition_guard_sec
+            ].reset_index(drop=True)
         index = choose_balanced_subset(index, args.task, args.max_windows_per_class)
         batches = iter_preprocessed_windows(
             files,
@@ -152,6 +174,7 @@ def main() -> None:
             index,
             picks,
             config,
+            context_sec=args.filter_context_sec,
             filter_scope=filter_scope,
         )
         try:

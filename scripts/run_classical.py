@@ -82,16 +82,16 @@ def load_features(
                 raise ValueError(f"Array length mismatch in {path.name}")
             arrays.append(data["X"])
             targets.append(data["y"])
-            metadata.append(
-                pd.DataFrame(
-                    {
+            metadata_values = {
                         "subject": data["subject"].astype(str),
                         "window_start_sec": data["window_start_sec"],
                         "block_id": data["block_id"],
                         "group_id": data["group_id"].astype(str),
-                    }
-                )
-            )
+            }
+            for optional in ("label", "distance_to_transition_sec"):
+                if optional in data:
+                    metadata_values[optional] = data[optional]
+            metadata.append(pd.DataFrame(metadata_values))
     if not arrays:
         raise FileNotFoundError(f"No subject_*.npz files found in {root}")
     if observed_subjects != expected_subjects:

@@ -1,8 +1,11 @@
 import numpy as np
 
 from mpd_df.preprocessing import (
+    ANNOTATION_CLASSIFICATION,
     ANNOTATION_VISUALIZATION,
     MNE_EEGLAB_LIKE,
+    PHYSIOLOGICAL_GLOBAL_ZSCORE,
+    PHYSIOLOGICAL_MICROVOLT,
     PHYSIOLOGICAL_VALIDATION,
     PSD_CLASSIFICATION,
     preprocess_batch,
@@ -23,6 +26,46 @@ def test_psd_classification_preserves_physical_amplitude() -> None:
     rng = np.random.default_rng(42)
     windows = 4.0 * rng.normal(size=(2, 4, 500))
     processed, sfreq = preprocess_batch(windows, 500.0, PSD_CLASSIFICATION)
+    assert processed.shape == (2, 4, 200)
+    assert sfreq == 200.0
+    assert not np.allclose(processed.std(axis=-1), 1.0, atol=1e-2)
+
+
+def test_global_zscore_preserves_channel_relative_scale() -> None:
+    rng = np.random.default_rng(42)
+    windows = rng.normal(size=(2, 4, 500))
+    windows[:, 0] *= 5.0
+    processed, sfreq = preprocess_batch(
+        windows,
+        500.0,
+        PHYSIOLOGICAL_GLOBAL_ZSCORE,
+    )
+    assert sfreq == 200.0
+    assert np.allclose(processed.mean(axis=(-2, -1)), 0.0, atol=1e-5)
+    assert np.allclose(processed.std(axis=(-2, -1)), 1.0, atol=1e-4)
+    assert np.all(processed[:, 0].std(axis=-1) > processed[:, 1].std(axis=-1))
+
+
+def test_microvolt_profile_has_model_friendly_scale() -> None:
+    rng = np.random.default_rng(42)
+    windows = 20e-6 * rng.normal(size=(2, 4, 500))
+    processed, sfreq = preprocess_batch(
+        windows,
+        500.0,
+        PHYSIOLOGICAL_MICROVOLT,
+    )
+    assert sfreq == 200.0
+    assert 1.0 < float(processed.std()) < 100.0
+
+
+def test_annotation_classification_downsamples_without_window_zscore() -> None:
+    rng = np.random.default_rng(42)
+    windows = 4.0 * rng.normal(size=(2, 4, 500))
+    processed, sfreq = preprocess_batch(
+        windows,
+        500.0,
+        ANNOTATION_CLASSIFICATION,
+    )
     assert processed.shape == (2, 4, 200)
     assert sfreq == 200.0
     assert not np.allclose(processed.std(axis=-1), 1.0, atol=1e-2)

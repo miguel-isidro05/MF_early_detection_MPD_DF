@@ -58,6 +58,7 @@ for model in psd_svm random_forest; do
       -name ".${model}.partial-*" -exec rm -rf {} +
     python scripts/run_nested_task_a.py \
       --raw-root "${RAW_ROOT}" --config configs/final/task_a_final.yaml \
+      --task A \
       --feature-dir "${CACHE_ROOT}/psd_edf32_within" \
       --output-root "${EXPERIMENT_ROOT}" --model "${model}" \
       --protocol within_subject --subject-allowlist "${ALLOWLIST}"
@@ -69,7 +70,7 @@ if [ ! -s "${EXPERIMENT_ROOT}/within_subject/eegnet/metrics.json" ]; then
   python scripts/run_nested_deep.py \
     --cache-dir "${CACHE_ROOT}/eeg_edf32_within" \
     --output-dir "${EXPERIMENT_ROOT}/within_subject/eegnet" \
-    --protocol within_subject --subject-allowlist "${ALLOWLIST}" \
+    --task A --protocol within_subject --subject-allowlist "${ALLOWLIST}" \
     --device cuda --seed 42
 fi
 rm -rf "${CACHE_ROOT}/psd_edf32_within" "${CACHE_ROOT}/eeg_edf32_within"
@@ -90,6 +91,7 @@ for model in psd_svm random_forest; do
       -name ".${model}.partial-*" -exec rm -rf {} +
     python scripts/run_nested_task_a.py \
       --raw-root "${RAW_ROOT}" --config configs/final/task_a_final.yaml \
+      --task A \
       --feature-dir "${CACHE_ROOT}/psd_edf32_loso" \
       --output-root "${EXPERIMENT_ROOT}" --model "${model}" --protocol loso
   fi
@@ -109,7 +111,7 @@ if [ ! -s "${EXPERIMENT_ROOT}/loso/eegnet/metrics.json" ]; then
   python scripts/run_nested_deep.py \
     --cache-dir "${CACHE_ROOT}/eeg_edf32_loso" \
     --output-dir "${EXPERIMENT_ROOT}/loso/eegnet" \
-    --protocol loso --device cuda --seed 42
+    --task A --protocol loso --device cuda --seed 42
 fi
 rm -rf "${CACHE_ROOT}/eeg_edf32_loso"
 
@@ -138,6 +140,7 @@ if [ ! -s "${EXPERIMENT_ROOT}/channel_paper28/loso/psd_svm/metrics.json" ]; then
     -name '.psd_svm.partial-*' -exec rm -rf {} +
   python scripts/run_nested_task_a.py \
     --raw-root "${RAW_ROOT}" --config configs/final/task_a_final.yaml \
+    --task A \
     --feature-dir "${CACHE_ROOT}/psd_paper28_loso" \
     --output-root "${EXPERIMENT_ROOT}/channel_paper28" \
     --model psd_svm --protocol loso
@@ -148,7 +151,7 @@ if [ ! -s "${EXPERIMENT_ROOT}/channel_paper28/loso/eegnet/metrics.json" ]; then
   python scripts/run_nested_deep.py \
     --cache-dir "${CACHE_ROOT}/eeg_paper28_loso" \
     --output-dir "${EXPERIMENT_ROOT}/channel_paper28/loso/eegnet" \
-    --protocol loso --device cuda --seed 42
+    --task A --protocol loso --device cuda --seed 42
 fi
 rm -rf "${CACHE_ROOT}/psd_paper28_loso" "${CACHE_ROOT}/eeg_paper28_loso"
 
@@ -159,6 +162,7 @@ fi
 if [ ! -s "${RESULT_ROOT}/README.md" ]; then
   python scripts/assemble_final_task_a_results.py \
     --experiments-root "${EXPERIMENT_ROOT}" --output-dir "${RESULT_ROOT}" \
+    --task A --protocol-config configs/final/task_a_final.yaml \
     --channel-ablation-root "${EXPERIMENT_ROOT}/channel_paper28"
 fi
 if [ ! -s "${RESULT_ROOT}/figures/tsne_psd_exploratory.png" ]; then

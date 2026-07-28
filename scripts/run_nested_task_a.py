@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Nested Task A executor (classical models implemented first)."""
+"""Nested binary-task executor for classical EEG baselines."""
 
 from __future__ import annotations
 
@@ -52,14 +52,15 @@ def main() -> None:
     parser.add_argument("--feature-dir", type=Path, required=True)
     parser.add_argument("--model", choices=("psd_svm", "random_forest"), required=True)
     parser.add_argument("--protocol", choices=("within_subject", "loso"), required=True)
+    parser.add_argument("--task", choices=("A", "B"), required=True)
     parser.add_argument("--max-folds", type=int)
     parser.add_argument("--subject-allowlist", type=Path)
     args = parser.parse_args()
     if not args.raw_root.is_dir():
         raise FileNotFoundError(args.raw_root)
     config = yaml.safe_load(args.config.read_text())
-    if config.get("task") != "A" or config.get("models") != ["psd_svm", "random_forest", "eegnet"]:
-        raise ValueError("Final executor accepts only the declared Task A protocol")
+    if config.get("task") != args.task or config.get("models") != ["psd_svm", "random_forest", "eegnet"]:
+        raise ValueError("Executor task/models do not match the declared protocol")
     svm_solver = config.get("svm_solver", {})
     required_solver_keys = {"max_iter", "tolerance", "convergence_warning"}
     if set(svm_solver) != required_solver_keys:
@@ -67,7 +68,7 @@ def main() -> None:
     if svm_solver["convergence_warning"] != "fail_run":
         raise ValueError("Final protocol requires convergence_warning=fail_run")
     from run_classical import load_features
-    X, y, metadata, _ = load_features(args.feature_dir, "A")
+    X, y, metadata, _ = load_features(args.feature_dir, args.task)
     if args.subject_allowlist:
         allowed = {v.strip().zfill(2) for v in args.subject_allowlist.read_text().splitlines() if v.strip()}
         keep = metadata.subject.astype(str).str.zfill(2).isin(allowed).to_numpy()
@@ -83,7 +84,7 @@ def main() -> None:
             for train, test in within_subject_splits(local, y[global_indices], seed=42):
                 outer.append((global_indices[train], global_indices[test]))
     output_dir = args.output_root / args.protocol / args.model
-    context = ExperimentContext(output_dir.name, "A", args.model, args.protocol, 42)
+    context = ExperimentContext(output_dir.name, args.task, args.model, args.protocol, 42)
     resolved = {key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()}
     partial = initialize_experiment(output_dir, context, resolved, " ".join(__import__('sys').argv), Path("."))
     predictions, folds, selections, assignments = [], [], [], []
@@ -134,7 +135,9 @@ def main() -> None:
     (partial / "subjects_train.txt").write_text("See split_assignments.csv\n")
     (partial / "subjects_validation.txt").write_text("Inner grouped validation; see inner_selection.json\n")
     (partial / "subjects_test.txt").write_text("See split_assignments.csv\n")
-    (partial / "README.md").write_text(f"# Nested Task A {args.model} {args.protocol}\n")
+    (partial / "README.md").write_text(
+        f"# Nested Task {args.task} {args.model} {args.protocol}\n"
+    )
     finalize_experiment(partial, output_dir)
     print(f"[{args.protocol}/{args.model}] complete: {output_dir}", flush=True)
 

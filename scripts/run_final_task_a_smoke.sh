@@ -37,6 +37,7 @@ for protocol in within_subject loso; do
   for model in psd_svm random_forest; do
     python scripts/run_nested_task_a.py \
       --raw-root "${RAW_ROOT}" --config configs/final/task_a_final.yaml \
+      --task A \
       --feature-dir "${CACHE_ROOT}/psd_${scope}" \
       --output-root "${EXPERIMENT_ROOT}" --model "${model}" \
       --protocol "${protocol}" --max-folds 1
@@ -44,7 +45,7 @@ for protocol in within_subject loso; do
   python scripts/run_nested_deep.py \
     --cache-dir "${CACHE_ROOT}/eeg_${scope}" \
     --output-dir "${EXPERIMENT_ROOT}/${protocol}/eegnet" \
-    --protocol "${protocol}" --device cuda --selection-epochs 1 \
+    --task A --protocol "${protocol}" --device cuda --selection-epochs 1 \
     --epochs 2 --patience 1 --max-folds 1 --seed 42
 done
 

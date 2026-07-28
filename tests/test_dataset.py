@@ -25,6 +25,10 @@ def test_window_index_never_crosses_annotation_blocks() -> None:
         for row in index.itertuples()
     )
     assert set(index["group_id"]) == {"01:1", "01:2"}
+    assert index.loc[
+        index["window_start_sec"].isin([20, 30]),
+        "distance_to_transition_sec",
+    ].eq(0).all()
 
 
 def test_alignment_can_use_portable_manifest(monkeypatch, tmp_path) -> None:

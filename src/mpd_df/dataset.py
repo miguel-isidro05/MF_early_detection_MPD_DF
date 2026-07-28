@@ -152,13 +152,27 @@ def build_window_index(
     stride_sec = window_sec if stride_sec is None else stride_sec
     if stride_sec <= 0:
         raise ValueError("stride_sec must be positive")
-    rows: list[dict[str, int | str]] = []
+    transitions = np.flatnonzero(
+        alignment.labels[1:] != alignment.labels[:-1]
+    ) + 1
+    rows: list[dict[str, int | str | float]] = []
     for start in range(0, alignment.duration_sec - window_sec + 1, stride_sec):
         end = start + window_sec
         window_labels = alignment.labels[start:end]
         window_blocks = alignment.block_ids[start:end]
         if np.unique(window_labels).size != 1 or np.unique(window_blocks).size != 1:
             continue
+        if transitions.size:
+            distance_to_transition = float(
+                np.min(
+                    np.minimum(
+                        np.abs(transitions - start),
+                        np.abs(transitions - end),
+                    )
+                )
+            )
+        else:
+            distance_to_transition = float("inf")
         rows.append(
             {
                 "subject": files.subject,
@@ -168,6 +182,7 @@ def build_window_index(
                 "label": int(window_labels[0]),
                 "block_id": int(window_blocks[0]),
                 "group_id": f"{files.subject}:{int(window_blocks[0])}",
+                "distance_to_transition_sec": distance_to_transition,
             }
         )
     return pd.DataFrame(rows)
@@ -241,11 +256,17 @@ def iter_preprocessed_windows(
         normalization = getattr(config, "normalization")
         if normalization == "none":
             return data
-        if normalization != "per_window_channel_zscore":
-            raise ValueError(f"Unsupported deferred normalization: {normalization}")
-        mean = data.mean(axis=-1, keepdims=True)
-        std = data.std(axis=-1, keepdims=True)
-        return (data - mean) / np.maximum(std, np.finfo(data.dtype).eps)
+        if normalization == "per_window_channel_zscore":
+            mean = data.mean(axis=-1, keepdims=True)
+            std = data.std(axis=-1, keepdims=True)
+            return (data - mean) / np.maximum(std, np.finfo(data.dtype).eps)
+        if normalization == "per_window_global_zscore":
+            mean = data.mean(axis=(-2, -1), keepdims=True)
+            std = data.std(axis=(-2, -1), keepdims=True)
+            return (data - mean) / np.maximum(std, np.finfo(data.dtype).eps)
+        if normalization == "microvolt_scale":
+            return data * 1e6
+        raise ValueError(f"Unsupported deferred normalization: {normalization}")
 
     if filter_scope == "subject_continuous":
         for begin in range(0, len(index), batch_size):
